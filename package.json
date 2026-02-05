@@ -5,13 +5,25 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "PORT=4020 next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@mapbox/mapbox-gl-draw": "^1.5.1",
+    "@reduxjs/toolkit": "^2.11.2",
+    "@turf/turf": "^7.3.3",
+    "chart.js": "^4.5.1",
+    "lucide-react": "^0.562.0",
+    "mapbox-gl": "^3.18.1",
     "next": "16.1.4",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "19.2.3",
+    "react-icon": "^1.0.0",
+    "react-icons": "^5.5.0",
+    "react-redux": "^9.2.0",
+    "sweetalert2": "^11.26.17",
+    "swiper": "^12.0.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

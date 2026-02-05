@@ -5,7 +5,7 @@ const HomeSlide = () => {
     <div className="container mx-auto">
       <div className="w-full h-125 overflow-hidden rounded-2xl relative">
         <video
-          src="/Video/slideBanner2.mp4"
+          src="https://res.cloudinary.com/delix6nht/video/upload/v1770301679/13505202-uhd_2560_1440_30fps_bsfkuq.mp4"
           autoPlay
           muted
           loop

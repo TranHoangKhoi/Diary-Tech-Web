@@ -64,7 +64,7 @@ const HomePage = () => {
                   Ngày
                 </p>
                 <span className="text-white font-bold text-center text-lg">
-                  27
+                  06
                 </span>
               </div>
               <div className="w-20 h-16 border rounded-lg drop-shadow-2xl  bg-white/20 backdrop-blur-sm cursor-pointer hover:opacity-80 border-grey flex flex-col justify-center gap-1 ">
@@ -72,7 +72,7 @@ const HomePage = () => {
                   Tháng
                 </p>
                 <span className="text-white font-bold text-center text-lg">
-                  01
+                  02
                 </span>
               </div>
               <div className="w-20 h-16 border rounded-lg drop-shadow-2xl  bg-white/20 backdrop-blur-sm cursor-pointer hover:opacity-80 border-grey flex flex-col justify-center gap-1 ">

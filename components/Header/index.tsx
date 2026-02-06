@@ -36,9 +36,9 @@ const Header = () => {
         {/* Menu */}
         <nav className="flex gap-7 px-3 flex-1 h-full">
           <Link
-            href="/"
+            href={appRoute.home}
             className={`hover:text-primary flex items-center text-base font-normal ${isActive(
-              "/"
+              appRoute.home
             )}`}
           >
             Trang chủ
@@ -54,9 +54,9 @@ const Header = () => {
           </Link>
 
           <Link
-            href="/map"
+            href={appRoute.map}
             className={`hover:text-primary flex items-center text-base font-normal ${isActive(
-              "/map"
+              appRoute.map
             )}`}
           >
             Bản đồ

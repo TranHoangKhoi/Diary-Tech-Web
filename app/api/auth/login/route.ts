@@ -25,6 +25,7 @@ export async function POST(req: Request) {
   response.cookies.set("token", data.token, {
     httpOnly: true,
     secure: true,
+    sameSite: "lax", // 👈 BẮT BUỘC
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });

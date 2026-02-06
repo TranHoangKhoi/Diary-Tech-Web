@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Next App",
-  description: "Website tối ưu SEO với Next.js",
+  title: "Bittech Diarytech",
+  description: "Hệ thống nhật ký điện tử",
 };
 
 const roboto = Roboto({

@@ -1,15 +1,18 @@
 "use client";
 
 import VietNamDistrict from "@/assets/LocationJson/vietnamDisttric.json";
-import PhongDienWardRaw from "@/assets/LocationJson/vietnamWard.json";
 import phongDienRiver from "@/assets/LocationJson/vietNamRiver.json";
+import PhongDienWardRaw from "@/assets/LocationJson/vietnamWard.json";
 import { LogoWeb } from "@/configs/appInfo";
 import { RootState } from "@/store";
 import { IMapItem } from "@/types/MapType";
+import MapboxDraw from "@mapbox/mapbox-gl-draw";
+import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+import * as turf from "@turf/turf";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Image from "next/image";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { farmHouseGeoJson } from "./Demo/Data/FakeData";
 import {
@@ -18,9 +21,6 @@ import {
   MAP_STYLE_LAYERS,
 } from "./Demo/mapStyleLayers";
 import MapSideBar from "./MapSideBar";
-import MapboxDraw from "@mapbox/mapbox-gl-draw";
-import * as turf from "@turf/turf";
-import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
@@ -38,48 +38,6 @@ const MapRenderDemo = (props: Props) => {
   const [selectedFarmId, setSelectedFarmId] = useState("");
   const [showRiver, setShowRiver] = useState(true);
   const areaPopupRef = useRef<mapboxgl.Popup | null>(null);
-
-  // const handleDraw = (e: any, draw: MapboxDraw) => {
-  //   const data = draw.getAll();
-  //   if (!data.features.length) return;
-
-  //   const polygon = data.features[0];
-
-  //   // 1️⃣ Toạ độ polygon
-  //   const coordinates = polygon.geometry.coordinates;
-
-  //   // 2️⃣ Tâm polygon (centroid)
-  //   const centroid = turf.centroid(polygon);
-  //   const centerCoord = centroid.geometry.coordinates; // [lng, lat]
-
-  //   // 3️⃣ Diện tích
-  //   const area = turf.area(polygon);
-
-  //   console.log("=== POLYGON DATA ===");
-  //   console.log(
-  //     JSON.stringify(
-  //       {
-  //         polygon: {
-  //           type: "Feature",
-  //           geometry: {
-  //             type: "Polygon",
-  //             coordinates,
-  //           },
-  //         },
-  //         centerPoint: {
-  //           type: "Feature",
-  //           geometry: {
-  //             type: "Point",
-  //             coordinates: centerCoord,
-  //           },
-  //         },
-  //         area: Math.round(area),
-  //       },
-  //       null,
-  //       2
-  //     )
-  //   );
-  // };
 
   const farmGeoJson: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
@@ -204,10 +162,24 @@ const MapRenderDemo = (props: Props) => {
     MAP_STYLE_LAYERS[styleId]?.(mapRef.current, ctx);
   };
 
+  const forceDrawOnTop = () => {
+    const map = mapRef.current;
+    const drawLayers = map
+      .getStyle()
+      .layers?.filter((l) => l.id.startsWith("gl-draw"))
+      .map((l) => l.id);
+
+    drawLayers?.forEach((id) => {
+      if (map.getLayer(id)) {
+        map.moveLayer(id);
+      }
+    });
+  };
+
   const changeMapStyle = async (styleId: number, styleUrl: string) => {
     if (!mapRef.current) return;
 
-    mapRef.current.setStyle(styleUrl);
+    mapRef.current.setStyle(styleUrl, { diff: false } as any);
 
     mapRef.current.once("style.load", async () => {
       // 1️⃣ Sync UI state
@@ -220,6 +192,7 @@ const MapRenderDemo = (props: Props) => {
       }
 
       // 3️⃣ Add lại source + layer
+
       applyStyleLayers(styleId);
 
       // 4️⃣ ÉP VISIBILITY SAU KHI LAYER ĐÃ CÓ
@@ -231,6 +204,40 @@ const MapRenderDemo = (props: Props) => {
           forceShowRiver ? "visible" : "none"
         );
       }
+    });
+  };
+
+  const initDraw = (map: mapboxgl.Map) => {
+    const draw = new MapboxDraw({
+      displayControlsDefault: false,
+      controls: {
+        polygon: true,
+        trash: true,
+      },
+    });
+
+    map.addControl(draw, "top-right");
+    drawRef.current = draw;
+
+    // đảm bảo draw layer render đúng
+    requestAnimationFrame(() => {
+      const drawLayers = map
+        .getStyle()
+        .layers?.filter((l) => l.id.startsWith("gl-draw"))
+        .map((l) => l.id);
+
+      drawLayers?.forEach((id) => {
+        if (map.getLayer(id)) {
+          map.moveLayer(id);
+        }
+      });
+    });
+
+    // DRAW EVENTS
+    map.on("draw.create", (e) => handleDraw(e, draw));
+    map.on("draw.update", (e) => handleDraw(e, draw));
+    map.on("draw.delete", () => {
+      areaPopupRef.current?.remove();
     });
   };
 
@@ -276,18 +283,7 @@ const MapRenderDemo = (props: Props) => {
         },
       });
 
-      map.addControl(draw, "top-right");
-
-      drawRef.current = draw;
-
-      // ✅ EVENT DRAW
-      map.on("draw.create", (e) => handleDraw(e, draw));
-      map.on("draw.update", (e) => handleDraw(e, draw));
-      map.on("draw.delete", () => {
-        areaPopupRef.current?.remove();
-      });
-
-      applyStyleLayers(1); // 👈 CHỈ DÒNG NÀY
+      applyStyleLayers(1);
 
       map.setMaxBounds([
         [102.0, 8.0],
@@ -306,6 +302,11 @@ const MapRenderDemo = (props: Props) => {
     });
 
     mapRef.current = map;
+
+    // ✅ CHỜ MAP ỔN ĐỊNH HOÀN TOÀN
+    map.once("idle", () => {
+      initDraw(map);
+    });
 
     return () => {
       map.remove();

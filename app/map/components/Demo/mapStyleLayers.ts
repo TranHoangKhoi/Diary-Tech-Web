@@ -277,6 +277,28 @@ const renderFarmHouseLayer = (map: mapboxgl.Map, ctx: MapLayerContext) => {
   });
 };
 
+const renderOutlineBoudary = (map: mapboxgl.Map, ctx: MapLayerContext) => {
+  // ===== BOUNDARY =====
+  if (!map.getSource("phongdien-boundary")) {
+    map.addSource("phongdien-boundary", {
+      type: "geojson",
+      data: ctx.phongDienGeoJson,
+    });
+  }
+
+  if (!map.getLayer("phongdien-outline")) {
+    map.addLayer({
+      id: "phongdien-outline",
+      type: "line",
+      source: "phongdien-boundary",
+      paint: {
+        "line-color": "#00C300",
+        "line-width": 3,
+      },
+    });
+  }
+};
+
 export const MAP_STYLE_LAYERS: Record<
   number,
   (map: mapboxgl.Map, ctx: MapLayerContext) => void
@@ -324,10 +346,13 @@ export const MAP_STYLE_LAYERS: Record<
         },
       });
     }
+
+    renderOutlineBoudary(map, ctx);
   },
 
   2: (map, ctx) => {
     renderFarmHouseLayer(map, ctx);
+    renderOutlineBoudary(map, ctx);
   },
 
   3: (map, ctx) => {
@@ -335,10 +360,69 @@ export const MAP_STYLE_LAYERS: Record<
 
     addFarmLayer(map, ctx.farmGeoJson);
     renderFarmHouseLayer(map, ctx);
+    renderOutlineBoudary(map, ctx);
   },
   4: (map, ctx) => {
     renderPhongDienOverlay(map, phongDienOverlayJson);
   },
+};
+
+const renderPhongDienOverlay = (map: mapboxgl.Map, overlayJson: any) => {
+  const [minLng, minLat, maxLng, maxLat] = getUnionBBox(overlayJson.features);
+
+  const sourceId = "phongdien-overlay";
+  const layerId = "phongdien-overlay-layer";
+
+  if (!map.getSource(sourceId)) {
+    map.addSource(sourceId, {
+      type: "image",
+      url: "/overlay/bdhh.png",
+      coordinates: [
+        [minLng, maxLat], // top-left
+        [maxLng, maxLat], // top-right
+        [maxLng, minLat], // bottom-right
+        [minLng, minLat], // bottom-left
+      ],
+    });
+  }
+
+  if (!map.getLayer(layerId)) {
+    // 👉 overlay luôn nằm DƯỚI polygon vẽ
+    const DRAW_TOP_LAYERS = [
+      "gl-draw-polygon-fill-active",
+      "gl-draw-polygon-stroke-active",
+      "gl-draw-polygon-fill-inactive",
+      "gl-draw-polygon-stroke-inactive",
+      "gl-draw-line-active",
+      "gl-draw-line-inactive",
+      "gl-draw-point-active",
+      "gl-draw-point-inactive",
+    ];
+
+    // 1️⃣ add overlay bình thường
+    if (!map.getLayer(layerId)) {
+      map.addLayer({
+        id: layerId,
+        type: "raster",
+        source: sourceId,
+        paint: {
+          "raster-opacity": 1,
+        },
+      });
+    }
+
+    // 2️⃣ ÉP toàn bộ draw layer nổi lên TRÊN overlay
+    DRAW_TOP_LAYERS.forEach((drawLayerId) => {
+      if (map.getLayer(drawLayerId)) {
+        map.moveLayer(drawLayerId);
+      }
+    });
+  }
+
+  // 🔒 đảm bảo polygon vẽ luôn nằm trên overlay
+  if (map.getLayer(layerId) && map.getLayer("gl-draw-polygon-fill")) {
+    map.moveLayer(layerId, "gl-draw-polygon-fill");
+  }
 };
 
 const addFarmLayer = (
@@ -448,26 +532,6 @@ export const applyBaseLayers = (map: mapboxgl.Map, ctx: MapLayerContext) => {
     });
   }
 
-  // ===== BOUNDARY =====
-  if (!map.getSource("phongdien-boundary")) {
-    map.addSource("phongdien-boundary", {
-      type: "geojson",
-      data: ctx.phongDienGeoJson,
-    });
-  }
-
-  if (!map.getLayer("phongdien-outline")) {
-    map.addLayer({
-      id: "phongdien-outline",
-      type: "line",
-      source: "phongdien-boundary",
-      paint: {
-        "line-color": "#00C300",
-        "line-width": 3,
-      },
-    });
-  }
-
   if (!map.getLayer("phongdien-ward-outline")) {
     // map.addLayer({
     //   id: "phongdien-ward-outline",
@@ -497,36 +561,6 @@ export const loadCropImages = async (map: mapboxgl.Map) => {
     });
     console.log("img: ", img);
     map.addImage(crop.icon, img);
-  }
-};
-const renderPhongDienOverlay = (map: mapboxgl.Map, overlayJson: any) => {
-  const [minLng, minLat, maxLng, maxLat] = getUnionBBox(overlayJson.features);
-
-  const sourceId = "phongdien-overlay";
-  const layerId = "phongdien-overlay-layer";
-
-  if (!map.getSource(sourceId)) {
-    map.addSource(sourceId, {
-      type: "image",
-      url: "/overlay/bdhh.png",
-      coordinates: [
-        [minLng, maxLat], // top-left
-        [maxLng, maxLat], // top-right
-        [maxLng, minLat], // bottom-right
-        [minLng, minLat], // bottom-left
-      ],
-    });
-  }
-
-  if (!map.getLayer(layerId)) {
-    map.addLayer({
-      id: layerId,
-      type: "raster",
-      source: sourceId,
-      paint: {
-        "raster-opacity": 0.8,
-      },
-    });
   }
 };
 

@@ -1,6 +1,7 @@
 export const appRoute = {
-  home: "/",
+  home: "/home",
   login: "/login",
+  map: "/map",
 };
 
 export const API_URL = {

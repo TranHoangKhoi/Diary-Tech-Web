@@ -3,7 +3,7 @@
 "use client";
 
 import Loading from "@/components/Loading";
-import { appRoute } from "@/configs/appRoute";
+import { API_INTERNAL, appRoute } from "@/configs/appRoute";
 import { login } from "@/services/auth.service";
 import { showError } from "@/utils/alert";
 import Link from "next/link";
@@ -65,7 +65,7 @@ const LoginPage = () => {
       setError("");
 
       if (res) {
-        const resCookei = await fetch("/api/auth/set-cookie", {
+        const resCookei = await fetch(`${API_INTERNAL}/auth/set-cookie`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(res),

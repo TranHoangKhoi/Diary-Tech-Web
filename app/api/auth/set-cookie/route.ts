@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+// app\api\auth\set-cookie\route.ts
+
 export async function POST(req: Request) {
   const { token } = await req.json();
 

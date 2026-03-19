@@ -16,8 +16,6 @@ const Header = () => {
   const userData = useSelector((state: RootState) => state.userProfile.profile);
   const pathname = usePathname();
 
-  console.log("userData: ", userData);
-
   const isActive = (path: string) => {
     if (pathname === path || pathname.startsWith(path + "/")) {
       return "text-primary font-medium border-b-2 border-b-primary";

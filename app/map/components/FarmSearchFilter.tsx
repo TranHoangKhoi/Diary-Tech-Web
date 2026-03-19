@@ -36,7 +36,7 @@ const FarmSearchFilter = (props: Props) => {
         name: f.properties.farm_name,
         crop_id: f.properties.crop_id,
         cropName: f.properties.crop_name,
-        coordinates: f?.geometry?.coordinates,
+        coordinates: (f.geometry as GeoJSON.Point).coordinates,
       }));
   }, [farms]);
 

@@ -64,7 +64,7 @@ export const getProfileServer = async (token: string) => {
 };
 
 export const logoutAPI = async () => {
-  await fetch("/api/auth/logout", {
+  await fetch(`${API_INTERNAL}/auth/logout`, {
     method: "POST",
   });
 };

@@ -2,6 +2,7 @@ import mapboxgl from "mapbox-gl";
 import { CROP_CATEGORIES } from "./Data/cropCategories";
 import { Dispatch, SetStateAction } from "react";
 import phongDienOverlayJson from "@/assets/LocationJson/features.json";
+import { IFarmMapGeomeTry } from "@/types/MapType";
 
 export type MapLayerContext = {
   phongDienMask?: GeoJSON.FeatureCollection;
@@ -20,28 +21,58 @@ const renderFarmHouseLayer = (map: mapboxgl.Map, ctx: MapLayerContext) => {
   if (!map.getSource("farm-house-polygons")) {
     const polygonGeoJson: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
-      features: ctx.farmHouseGeoJson.features.filter(
-        (f) => f.geometry.type === "Polygon"
-      ),
+      features: ctx.farmHouseGeoJson.features
+        .filter((f) => f.geometry.type === "Polygon")
+        .map((f) => ({
+          ...f,
+          properties: {
+            ...f.properties,
+
+            id: f.properties?.farm_id,
+
+            // 🔥 QUAN TRỌNG
+            crop_id: f.properties?.crop_id,
+
+            // (optional nhưng nên có)
+            cropId: f.properties?.crop_id,
+          },
+        })),
     };
+
+    // const pointGeoJson: GeoJSON.FeatureCollection = {
+    //   type: "FeatureCollection",
+    //   features: ctx.farmHouseGeoJson.features
+    //     .filter((f) => f.geometry.type === "Point")
+    //     .map((f) => {
+    //       const crop = CROP_CATEGORIES[f.properties?.cropId];
+    //       return {
+    //         ...f,
+    //         properties: {
+    //           ...f.properties,
+    //           id: f.id,
+    //           icon: crop?.icon,
+    //           cropName: crop?.name,
+    //           image: crop?.image,
+    //         },
+    //       };
+    //     }),
+    // };
 
     const pointGeoJson: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
       features: ctx.farmHouseGeoJson.features
         .filter((f) => f.geometry.type === "Point")
-        .map((f) => {
-          const crop = CROP_CATEGORIES[f.properties?.cropId];
-          return {
-            ...f,
-            properties: {
-              ...f.properties,
-              id: f.id,
-              icon: crop?.icon,
-              cropName: crop?.name,
-              image: crop?.image,
-            },
-          };
-        }),
+        .map((f) => ({
+          ...f,
+          properties: {
+            ...f.properties,
+            id: f.properties?.farm_id,
+            cropId: f.properties?.cropId,
+            // 👇 QUAN TRỌNG
+            icon: f.properties?.farm_id, // dùng id làm key image
+            image: f.properties?.crop_image,
+          },
+        })),
     };
 
     map.addSource("farm-house-polygons", {
@@ -62,21 +93,7 @@ const renderFarmHouseLayer = (map: mapboxgl.Map, ctx: MapLayerContext) => {
       type: "fill",
       source: "farm-house-polygons",
       paint: {
-        "fill-color": [
-          "match",
-          ["get", "cropId"],
-          "dau",
-          "#FFEB3B",
-          "sau-rieng",
-          "#8BC34A",
-          "mang-cut",
-          "#9C27B0",
-          "chom-chom",
-          "#F44336",
-          "xoai",
-          "#FF9800",
-          "#BDBDBD",
-        ],
+        "fill-color": ["get", "crop_color"],
         "fill-opacity": 0.6,
       },
     });
@@ -579,4 +596,36 @@ const getUnionBBox = (features: any[]) => {
   });
 
   return [minLng, minLat, maxLng, maxLat];
+};
+
+export const loadFarmImages = async (
+  map: mapboxgl.Map,
+  farms: IFarmMapGeomeTry
+) => {
+  const uniqueImages = new Map<string, string>();
+
+  farms.features.forEach((f) => {
+    if (f.geometry.type === "Point") {
+      const id = f.properties?.farm_id;
+      const crop_image = f.properties?.crop_image;
+
+      if (id && crop_image) {
+        uniqueImages.set(id, crop_image);
+      }
+    }
+  });
+
+  for (const [id, url] of uniqueImages.entries()) {
+    if (map.hasImage(id)) continue;
+
+    const img = await new Promise<HTMLImageElement>((res, rej) => {
+      const i = new Image();
+      i.crossOrigin = "anonymous";
+      i.onload = () => res(i);
+      i.onerror = rej;
+      i.src = url;
+    });
+
+    map.addImage(id, img);
+  }
 };

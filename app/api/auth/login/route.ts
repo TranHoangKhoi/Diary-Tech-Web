@@ -9,6 +9,7 @@ export async function POST(req: Request) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    credentials: "include",
   });
 
   const data = await res.json();
@@ -24,11 +25,10 @@ export async function POST(req: Request) {
 
   response.cookies.set("token", data.token, {
     httpOnly: true,
-    secure: true,
-    sameSite: "lax", // 👈 BẮT BUỘC
+    secure: false, // HTTPS → BẮT BUỘC
+    sameSite: "lax", // 🔥 QUAN TRỌNG
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
-
   return response;
 }

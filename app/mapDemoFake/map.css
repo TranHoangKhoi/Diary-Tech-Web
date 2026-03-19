@@ -1,0 +1,12 @@
+.swiper-pagination-bullet {
+  width: 20px !important;
+  height: 4px !important;
+  background: #f4f4f4 !important;
+  opacity: 1;
+  border-radius: 1 !important;
+}
+
+.custom-dot-active {
+  background: #13ec13 !important;
+  transform: scale(1.3);
+}

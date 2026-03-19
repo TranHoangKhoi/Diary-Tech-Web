@@ -1,0 +1,10 @@
+.mapboxgl-ctrl-bottom,
+.mapboxgl-ctrl-bottom-left,
+.mapboxgl-ctrl-bottom-right,
+.mapboxgl-ctrl-left,
+.mapboxgl-ctrl-right,
+.mapboxgl-ctrl-top,
+.mapboxgl-ctrl-top-left,
+.mapboxgl-ctrl-top-right {
+  z-index: 0;
+}

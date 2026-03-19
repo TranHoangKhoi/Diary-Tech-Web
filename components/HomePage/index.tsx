@@ -18,10 +18,24 @@ import CropStatisticCard from "./CropStatisticCard";
 import InsightTodayCard from "./Components/InsightTodayCard";
 import UpcomingTaskCard from "./Components/UpcomingTaskCard";
 import WeeklyKPIStrip from "./Components/WeeklyKPIStrip";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const HomePage = () => {
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
+
+  const userProfile = useSelector(
+    (state: RootState) => state.userProfile.profile
+  );
+
+  const currentFarm = useSelector((state: RootState) => state.farm.currentFarm);
+
+  const now = new Date();
+
+  const day = now.getDate().toString().padStart(2, "0");
+  const month = (now.getMonth() + 1).toString().padStart(2, "0");
+  const year = now.getFullYear();
 
   return (
     <div className="">
@@ -49,12 +63,16 @@ const HomePage = () => {
           <div className="absolute top-4 left-6 bottom-4 right-6 flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <p className="text-grey text-sm">Xin chào,</p>
-              <p className="text-white font-medium text-2xl">Trần Hoàng Khôi</p>
+              <p className="text-white font-medium text-2xl">
+                {userProfile?.name}
+              </p>
               <div className="flex gap-1 items-center">
                 <IoLocation size={16} className="text-grey" />
 
                 <p className="text-grey text-sm">
-                  Hợp tác xã nông nghiệp Cần Thơ
+                  {userProfile?.address
+                    ? userProfile?.address
+                    : `${currentFarm?.location}, ${currentFarm?.ward?.name}, ${currentFarm?.province?.name}`}
                 </p>
               </div>
             </div>
@@ -64,7 +82,7 @@ const HomePage = () => {
                   Ngày
                 </p>
                 <span className="text-white font-bold text-center text-lg">
-                  06
+                  {day}
                 </span>
               </div>
               <div className="w-20 h-16 border rounded-lg drop-shadow-2xl  bg-white/20 backdrop-blur-sm cursor-pointer hover:opacity-80 border-grey flex flex-col justify-center gap-1 ">
@@ -72,7 +90,7 @@ const HomePage = () => {
                   Tháng
                 </p>
                 <span className="text-white font-bold text-center text-lg">
-                  02
+                  {month}
                 </span>
               </div>
               <div className="w-20 h-16 border rounded-lg drop-shadow-2xl  bg-white/20 backdrop-blur-sm cursor-pointer hover:opacity-80 border-grey flex flex-col justify-center gap-1 ">
@@ -80,7 +98,7 @@ const HomePage = () => {
                   Năm
                 </p>
                 <span className="text-white font-bold text-center text-lg">
-                  2026
+                  {year}
                 </span>
               </div>
             </div>

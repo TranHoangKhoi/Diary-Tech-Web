@@ -1,3 +1,5 @@
+import { Feature, FeatureCollection, Geometry } from "geojson";
+
 export interface IMapItem {
   _id: string;
   owner_id: OwnerId;
@@ -59,4 +61,57 @@ export interface Ward {
   province_code: string;
   created_at: any;
   updated_at: any;
+}
+
+// Farm Map List
+export interface FarmProperties {
+  farm_id: string;
+  farm_name?: string;
+  avatar?: string;
+  crop_id?: string;
+  crop_name?: string;
+  crop_color: string;
+  crop_icon?: string;
+  crop_image?: string;
+  area?: number;
+  unit?: string;
+}
+
+export type IFarmMapGeomeTry = FeatureCollection<Geometry, FarmProperties>;
+
+// Farm Map Details
+
+export interface IFarmMapDetails {
+  _id: string;
+  area: number;
+  unit: string;
+  id: string;
+  name: string;
+  owner: string;
+  phone: string;
+  cropId: string;
+  avatar: string;
+  cropName: string;
+  cropType: string;
+  address: string;
+  status: string;
+  farmingModel: string;
+  certification: any[];
+  images: string[];
+  description: string;
+  reports: Report[];
+  seasons: Season[];
+  updatedAt: string;
+}
+
+export interface Report {
+  year: number;
+  yield: number;
+}
+
+export interface Season {
+  _id: string;
+  season: string;
+  year: number;
+  result: string;
 }

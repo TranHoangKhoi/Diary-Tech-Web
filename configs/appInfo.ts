@@ -4,3 +4,7 @@ export const LogoWeb = {
   LogoHorizontalGreen: LogoHorizontalGreen,
   LogoHorizatalGreen2: LogoHorizatalGreen2,
 };
+
+export const imageApp = {
+  avartarEmpty: "",
+};

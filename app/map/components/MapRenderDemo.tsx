@@ -5,22 +5,25 @@ import phongDienRiver from "@/assets/LocationJson/vietNamRiver.json";
 import PhongDienWardRaw from "@/assets/LocationJson/vietnamWard.json";
 import { LogoWeb } from "@/configs/appInfo";
 import { RootState } from "@/store";
-import { IMapItem } from "@/types/MapType";
+import { IFarmMapGeomeTry, IMapItem } from "@/types/MapType";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import * as turf from "@turf/turf";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Image from "next/image";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { farmHouseGeoJson } from "./Demo/Data/FakeData";
 import {
   applyBaseLayers,
   loadCropImages,
+  loadFarmImages,
   MAP_STYLE_LAYERS,
 } from "./Demo/mapStyleLayers";
 import MapSideBar from "./MapSideBar";
+import { initDraw } from "../Func/MapFunc";
+import { getMapInfo } from "@/services/map.service";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
@@ -37,6 +40,7 @@ const MapRenderDemo = (props: Props) => {
   const drawRef = useRef<MapboxDraw | null>(null);
   const [selectedFarmId, setSelectedFarmId] = useState("");
   const [showRiver, setShowRiver] = useState(true);
+  const [farms, setFarms] = useState<IFarmMapGeomeTry | undefined>(undefined);
   const areaPopupRef = useRef<mapboxgl.Popup | null>(null);
 
   const farmGeoJson: GeoJSON.FeatureCollection = {
@@ -103,47 +107,6 @@ const MapRenderDemo = (props: Props) => {
       })),
   };
 
-  const handleDraw = (e: any, draw: MapboxDraw) => {
-    const data = draw.getAll();
-    if (!data.features.length) return;
-
-    const polygon = data.features[data.features.length - 1];
-
-    // 1️⃣ Diện tích (m²)
-    const area = turf.area(polygon);
-
-    // 2️⃣ Tâm polygon
-    const center = turf.centroid(polygon).geometry.coordinates as [
-      number,
-      number
-    ];
-
-    // 3️⃣ Format diện tích
-    const areaText =
-      area > 1_000_000
-        ? `${(area / 1_000_000).toFixed(2)} km²`
-        : `${Math.round(area)} m²`;
-
-    // 4️⃣ Init popup
-    if (!areaPopupRef.current) {
-      areaPopupRef.current = new mapboxgl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        offset: 8,
-      });
-    }
-
-    // 5️⃣ Show popup
-    areaPopupRef.current
-      .setLngLat(center)
-      .setHTML(
-        `<div style="font-weight:600;font-size:13px">
-        Diện tích: ${areaText}
-      </div>`
-      )
-      .addTo(mapRef.current!);
-  };
-
   const applyStyleLayers = (styleId: number) => {
     if (!mapRef.current) return;
 
@@ -152,7 +115,8 @@ const MapRenderDemo = (props: Props) => {
       phongDienGeoJson,
       phongDienWardsGeoJson,
       farmGeoJson,
-      farmHouseGeoJson, // ✅ THÊM DÒNG NÀY
+      // farmHouseGeoJson,
+      farmHouseGeoJson: farms,
       phongDienRiver,
       setSelectedFarmId,
     };
@@ -160,20 +124,6 @@ const MapRenderDemo = (props: Props) => {
     applyBaseLayers(mapRef.current, ctx);
 
     MAP_STYLE_LAYERS[styleId]?.(mapRef.current, ctx);
-  };
-
-  const forceDrawOnTop = () => {
-    const map = mapRef.current;
-    const drawLayers = map
-      .getStyle()
-      .layers?.filter((l) => l.id.startsWith("gl-draw"))
-      .map((l) => l.id);
-
-    drawLayers?.forEach((id) => {
-      if (map.getLayer(id)) {
-        map.moveLayer(id);
-      }
-    });
   };
 
   const changeMapStyle = async (styleId: number, styleUrl: string) => {
@@ -188,7 +138,11 @@ const MapRenderDemo = (props: Props) => {
 
       // 2️⃣ Load icon nếu cần
       if (styleId === 2 || styleId === 3) {
-        await loadCropImages(mapRef.current);
+        // await loadCropImages(mapRef.current);
+
+        if (farms) {
+          await loadFarmImages(mapRef.current, farms);
+        }
       }
 
       // 3️⃣ Add lại source + layer
@@ -207,43 +161,21 @@ const MapRenderDemo = (props: Props) => {
     });
   };
 
-  const initDraw = (map: mapboxgl.Map) => {
-    const draw = new MapboxDraw({
-      displayControlsDefault: false,
-      controls: {
-        polygon: true,
-        trash: true,
-      },
-    });
-
-    map.addControl(draw, "top-right");
-    drawRef.current = draw;
-
-    // đảm bảo draw layer render đúng
-    requestAnimationFrame(() => {
-      const drawLayers = map
-        .getStyle()
-        .layers?.filter((l) => l.id.startsWith("gl-draw"))
-        .map((l) => l.id);
-
-      drawLayers?.forEach((id) => {
-        if (map.getLayer(id)) {
-          map.moveLayer(id);
-        }
-      });
-    });
-
-    // DRAW EVENTS
-    map.on("draw.create", (e) => handleDraw(e, draw));
-    map.on("draw.update", (e) => handleDraw(e, draw));
-    map.on("draw.delete", () => {
-      areaPopupRef.current?.remove();
-    });
-  };
+  useEffect(() => {
+    const handleGetFarm = async () => {
+      try {
+        const res = await getMapInfo();
+        setFarms(res);
+      } catch (error) {
+        console.log(error);
+      } finally {
+      }
+    };
+    handleGetFarm();
+  }, []);
 
   useLayoutEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
-    console.log("mapRef: ", mapRef.current, mapContainer.current);
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
@@ -305,7 +237,7 @@ const MapRenderDemo = (props: Props) => {
 
     // ✅ CHỜ MAP ỔN ĐỊNH HOÀN TOÀN
     map.once("idle", () => {
-      initDraw(map);
+      initDraw(map, areaPopupRef, drawRef, mapRef);
     });
 
     return () => {
@@ -329,6 +261,7 @@ const MapRenderDemo = (props: Props) => {
         mapRef={mapRef}
         setShowRiver={setShowRiver}
         showRiver={showRiver}
+        farms={farms}
       />
 
       <div className="absolute bottom-2 right-2 z-10">

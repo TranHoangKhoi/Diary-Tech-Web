@@ -8,6 +8,7 @@ import { logout } from "@/store/slices/auth.slice";
 import { useRouter } from "next/navigation";
 import { appRoute } from "@/configs/appRoute";
 import { logoutAPI } from "@/services/auth.service";
+import { clearFarms } from "@/store/slices/farm.slice";
 
 interface Props {
   userData: {
@@ -37,6 +38,7 @@ const UserDropdown = ({ userData }: Props) => {
   const handleLogout = async () => {
     const res = await logoutAPI(); // 👈 xoá cookie
     dispatch(logout()); // 👈 clear redux
+    dispatch(clearFarms()); // 👈 clear redux
     router.replace(appRoute.login);
     console.log(res);
   };
@@ -53,7 +55,7 @@ const UserDropdown = ({ userData }: Props) => {
           alt={userData.name}
           width={36}
           height={36}
-          className="rounded-full object-cover border"
+          className="rounded-full object-cover border w-9 h-9"
         />
       </button>
 

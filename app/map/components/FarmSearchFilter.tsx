@@ -1,9 +1,8 @@
 "use client";
 
-import { Dispatch, SetStateAction, useMemo, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import { FARM_FAKE_DATA } from "./Demo/farmDetails";
-import { CROP_CATEGORIES } from "./Demo/Data/cropCategories";
+import { ICrop } from "@/types/CropType";
+import { IFarmMapGeomeTry } from "@/types/MapType";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { FiX } from "react-icons/fi";
 import { farmHouseGeoJson } from "./Demo/Data/FakeData";
 
@@ -12,6 +11,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   setSelectedFarmId: Dispatch<SetStateAction<string>>;
+  farms: IFarmMapGeomeTry;
+  crops: ICrop[];
 }
 
 export const getFarmPointById = (farmId: string) => {
@@ -20,55 +21,67 @@ export const getFarmPointById = (farmId: string) => {
   );
 };
 
-const FarmSearchFilter = ({ map, onClose, open, setSelectedFarmId }: Props) => {
+const FarmSearchFilter = (props: Props) => {
+  const { farms, map, onClose, open, setSelectedFarmId, crops } = props;
   const [keyword, setKeyword] = useState("");
   const [selectedCate, setSelectedCate] = useState("all");
+
+  const farmList = useMemo(() => {
+    if (!farms) return [];
+
+    return farms.features
+      .filter((f) => f.geometry.type === "Point")
+      .map((f) => ({
+        id: f.properties.farm_id,
+        name: f.properties.farm_name,
+        crop_id: f.properties.crop_id,
+        cropName: f.properties.crop_name,
+        coordinates: f?.geometry?.coordinates,
+      }));
+  }, [farms]);
 
   // ===== FILTER LIST ONLY (KHÔNG ĐỤNG MAP) =====
   const filteredFarms = useMemo(() => {
     if (!keyword && selectedCate === "all") return [];
 
-    return FARM_FAKE_DATA.filter((farm) => {
+    console.log("selectedCate: ", selectedCate);
+
+    return farmList.filter((farm) => {
       const matchKeyword =
-        farm.owner.toLowerCase().includes(keyword.toLowerCase()) ||
+        farm.name.toLowerCase().includes(keyword.toLowerCase()) ||
         farm.cropName.toLowerCase().includes(keyword.toLowerCase());
 
-      const matchCate = selectedCate === "all" || farm.cropId === selectedCate;
+      const matchCate = selectedCate === "all" || farm.crop_id === selectedCate;
+      console.log("farm.crop_id: ", farm.crop_id);
 
       return matchKeyword && matchCate;
     });
-  }, [keyword, selectedCate]);
+  }, [keyword, selectedCate, farmList]);
 
   // ===== CLICK FARM → FLY TO MAP =====
   const handleSelectFarm = (farm: any) => {
     if (!map) return;
 
-    const feature: any = getFarmPointById(farm.id);
-
-    if (!feature) {
-      console.warn("Không tìm thấy farm:", farm.id);
-      return;
-    }
-
-    const [lng, lat] = feature.geometry.coordinates as [number, number];
+    const [lng, lat] = farm.coordinates;
 
     map.flyTo({
       center: [lng, lat],
       zoom: 16,
-      offset: [200, -80], // né slide
+      offset: [200, -80],
       speed: 1.2,
       essential: true,
     });
 
     setSelectedFarmId(farm.id);
-
     onClose();
   };
 
+  useEffect(() => {
+    console.log("farmList: ", farmList);
+  }, [farmList]);
+
   return (
     <>
-      {/* OVERLAY */}
-
       {/* SLIDE PANEL */}
       <div
         className={`absolute top-0 left-0 h-full w-90 bg-white z-50 shadow-xl
@@ -100,8 +113,8 @@ const FarmSearchFilter = ({ map, onClose, open, setSelectedFarmId }: Props) => {
             className="border px-3 py-2 rounded-lg text-sm"
           >
             <option value="all">Tất cả danh mục</option>
-            {Object.values(CROP_CATEGORIES).map((c) => (
-              <option key={c.id} value={c.id}>
+            {crops.map((c) => (
+              <option key={c._id} value={c._id}>
                 {c.name}
               </option>
             ))}
@@ -120,8 +133,8 @@ const FarmSearchFilter = ({ map, onClose, open, setSelectedFarmId }: Props) => {
                   onClick={() => handleSelectFarm(farm)}
                   className="border rounded-lg p-3 cursor-pointer hover:bg-gray-50"
                 >
-                  <p className="font-medium text-sm">{farm.owner}</p>
-                  <p className="text-xs text-gray-500">{farm.name}</p>
+                  <p className="font-medium text-sm">{farm.name}</p>
+                  <p className="text-xs text-gray-500">{farm.cropName}</p>
                 </li>
               ))}
             </ul>

@@ -4,6 +4,8 @@ import { X } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { CROP_CATEGORIES } from "./Demo/Data/cropCategories";
 import { farmHouseGeoJson } from "./Demo/Data/FakeData";
+import { ICrop } from "@/types/CropType";
+import { getCrops } from "@/services/cropCate.service";
 
 interface Props {
   open: boolean;
@@ -11,37 +13,22 @@ interface Props {
   map: mapboxgl.Map | null;
   setShowRiver: Dispatch<SetStateAction<boolean>>;
   showRiver: boolean;
+  crops: ICrop[];
 }
 
-const FarmCategorySlide = ({
-  open,
-  onClose,
-  map,
-  setShowRiver,
-  showRiver,
-}: Props) => {
-  const categoryList = Object.values(CROP_CATEGORIES);
+const FarmCategorySlide = (props: Props) => {
+  const { map, onClose, open, setShowRiver, showRiver, crops } = props;
 
-  // Mặc định check hết
-  const [checked, setChecked] = useState<Record<string, boolean>>(() =>
-    categoryList.reduce((acc, c) => {
-      acc[c.id] = true;
-      return acc;
-    }, {} as Record<string, boolean>)
-  );
-
-  const farmCountByCrop = categoryList.reduce((acc, c) => {
-    acc[c.id] = farmHouseGeoJson.features.filter(
-      (f: any) => f.geometry.type === "Point" && f.properties?.cropId === c.id
-    ).length;
-    return acc;
-  }, {} as Record<string, number>);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const categoryList = crops;
 
   // Mỗi lần checkbox đổi → filter map
   useEffect(() => {
     if (!map || !map.isStyleLoaded()) return;
 
     const activeCategories = Object.keys(checked).filter((key) => checked[key]);
+
+    console.log("activeCategories: ", JSON.stringify(activeCategories));
 
     const hideFilter: any = ["==", ["get", "cropId"], "__none__"];
 
@@ -56,7 +43,7 @@ const FarmCategorySlide = ({
     // Có chọn → lọc theo cropId
     const filter: any = [
       "in",
-      ["get", "cropId"],
+      ["get", "crop_id"],
       ["literal", activeCategories],
     ];
 
@@ -78,7 +65,26 @@ const FarmCategorySlide = ({
 
   const toggle = (id: string) => {
     setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
+
+    // map?.querySourceFeatures("farm-house-points").forEach((f) => {
+    //   console.log(JSON.stringify(f.properties));
+    // });
+
+    map?.querySourceFeatures("farm-house-polygons").forEach((f) => {
+      console.log("POLYGON:", f.properties);
+    });
   };
+
+  useEffect(() => {
+    if (!crops?.length) return;
+
+    const initChecked: Record<string, boolean> = {};
+    crops.forEach((c) => {
+      initChecked[c._id] = true;
+    });
+
+    setChecked(initChecked);
+  }, [crops]);
 
   return (
     <div
@@ -108,28 +114,28 @@ const FarmCategorySlide = ({
           </span>
         </label>
 
-        {categoryList.map((cate) => (
+        {categoryList?.map((cate) => (
           <label
-            key={cate.id}
+            key={cate?._id}
             className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
           >
             <input
               type="checkbox"
-              checked={checked[cate.id]}
-              onChange={() => toggle(cate.id)}
+              checked={checked[cate?._id]}
+              onChange={() => toggle(cate?._id)}
               className="w-4 h-4 accent-green-600"
             />
-            <img src={cate.image} alt="" className="w-8 h-8 object-contain" />
+            <img src={cate?.image} alt="" className="w-8 h-8 object-contain" />
             <div className="flex-1">
-              <p className="font-medium text-sm">{cate.name}</p>
-              {/* <p className="text-xs text-gray-500">{cate.id}</p> */}
+              <p className="font-medium text-sm">{cate?.name}</p>
+              {/* <p className="text-xs text-gray-500">{cate?.id}</p> */}
               <p className="text-xs text-gray-500">
-                {farmCountByCrop[cate.id] || 0} hộ đang trồng
+                {cate?.farmCount} hộ đang trồng
               </p>
             </div>
             <span
               className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: cate.color }}
+              style={{ backgroundColor: cate?.color }}
             />
           </label>
         ))}

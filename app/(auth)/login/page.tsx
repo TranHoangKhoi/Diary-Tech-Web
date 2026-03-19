@@ -63,8 +63,16 @@ const LoginPage = () => {
       setLoading(true);
       const res = await login(dataLogin);
       setError("");
-      console.log(res);
+
       if (res) {
+        const resCookei = await fetch("/api/auth/set-cookie", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(res),
+        });
+        console.log("Token: ", res.token);
+        console.log("resCookei: ", resCookei);
+
         router.replace(appRoute.home);
       }
     } catch (err: unknown) {

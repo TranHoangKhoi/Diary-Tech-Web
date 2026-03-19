@@ -10,14 +10,21 @@ import React from "react";
 import { useSelector } from "react-redux";
 import UserDropdown from "./UserDropdown";
 import { usePathname } from "next/navigation";
+import { ROLE } from "@/configs/appConfig";
 
 const Header = () => {
   const userData = useSelector((state: RootState) => state.userProfile.profile);
   const pathname = usePathname();
 
-  const isActive = (path: string) =>
-    pathname === path &&
-    "text-primary font-medium! border-b-2 border-b-primary";
+  console.log("userData: ", userData);
+
+  const isActive = (path: string) => {
+    if (pathname === path || pathname.startsWith(path + "/")) {
+      return "text-primary font-medium border-b-2 border-b-primary";
+    }
+
+    return "";
+  };
 
   return (
     <header className="bg-background h-16 shadow fixed top-0 left-0 right-0 z-99999">
@@ -44,14 +51,39 @@ const Header = () => {
             Trang chủ
           </Link>
 
-          <Link
-            href="/about"
-            className={`hover:text-primary flex items-center text-base font-normal ${isActive(
-              "/about"
-            )}`}
-          >
-            Nhật ký
-          </Link>
+          {userData?.role && userData.role === ROLE.SubAccount && (
+            <Link
+              href={appRoute.diary}
+              className={`hover:text-primary flex items-center text-base font-normal ${isActive(
+                appRoute.diary
+              )}`}
+            >
+              Nhật ký
+            </Link>
+          )}
+
+          {userData?.role &&
+            (userData?.role === ROLE.Owner ||
+              userData?.role === ROLE.SuperAdmin) && (
+              <>
+                <Link
+                  href={appRoute.ownerDiary}
+                  className={`hover:text-primary flex items-center text-base font-normal ${isActive(
+                    appRoute.ownerDiary
+                  )}`}
+                >
+                  Nhật ký
+                </Link>
+                <Link
+                  href={appRoute.ownerAddAccount}
+                  className={`hover:text-primary flex items-center text-base font-normal ${isActive(
+                    appRoute.ownerAddAccount
+                  )}`}
+                >
+                  Tài khoản
+                </Link>
+              </>
+            )}
 
           <Link
             href={appRoute.map}

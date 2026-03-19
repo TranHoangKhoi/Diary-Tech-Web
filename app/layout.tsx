@@ -1,9 +1,6 @@
-import type { Metadata } from "next";
+import ReduxProvider from "@/store/provider";
 import { Geist, Geist_Mono, Roboto } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import ReduxProvider from "@/store/provider";
-import AuthProvider from "@/middleware/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +35,7 @@ export default function RootLayout({
       >
         <ReduxProvider>
           {/* <AuthProvider>{children}</AuthProvider> */}
+
           {children}
         </ReduxProvider>
       </body>

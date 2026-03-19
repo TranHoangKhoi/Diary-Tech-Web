@@ -17,6 +17,9 @@ import { Map } from "mapbox-gl";
 import { AiFillFilter, AiOutlineFilter } from "react-icons/ai";
 import { RiSearch2Fill, RiSearch2Line } from "react-icons/ri";
 import FarmSearchFilter from "./FarmSearchFilter";
+import { IFarmMapGeomeTry } from "@/types/MapType";
+import { getCrops } from "@/services/cropCate.service";
+import { ICrop } from "@/types/CropType";
 
 interface Props {
   onChangeStyle: (styleId: number, styleUrl: string) => void;
@@ -25,6 +28,7 @@ interface Props {
   mapRef: RefObject<Map>;
   setShowRiver: Dispatch<SetStateAction<boolean>>;
   showRiver: boolean;
+  farms: IFarmMapGeomeTry;
 }
 
 const MapSideBar = (props: Props) => {
@@ -35,15 +39,31 @@ const MapSideBar = (props: Props) => {
     mapRef,
     setShowRiver,
     showRiver,
+    farms,
   } = props;
   const [open, setOpen] = useState(false);
   const selectedFarm = FARM_FAKE_DATA.find((f) => f.id === selectedFarmId);
   const [openCate, setOpenCate] = useState(false);
   const [openSearch, setOpenSearch] = useState(false);
+  const [crops, setCrops] = useState<ICrop[]>([]);
 
   useEffect(() => {
-    if (selectedFarm) setOpen(true);
-  }, [selectedFarm]);
+    if (selectedFarmId) setOpen(true);
+  }, [selectedFarmId]);
+
+  useEffect(() => {
+    const handleGetCrops = async () => {
+      try {
+        const res = await getCrops();
+        setCrops(res.data);
+      } catch (error) {
+        console.log(error);
+      } finally {
+      }
+    };
+
+    handleGetCrops();
+  }, []);
 
   return (
     <div className="">
@@ -89,7 +109,7 @@ const MapSideBar = (props: Props) => {
         <LayerComponent onChangeStyle={onChangeStyle} />
       </div>
       <FarmDetailSlide
-        farm={selectedFarm}
+        farmId={selectedFarmId}
         open={open}
         onClose={() => {
           setOpen(false);
@@ -102,10 +122,13 @@ const MapSideBar = (props: Props) => {
         map={mapRef.current}
         setShowRiver={setShowRiver}
         showRiver={showRiver}
+        crops={crops}
       />
       <FarmSearchFilter
+        farms={farms}
         map={mapRef.current}
         open={openSearch}
+        crops={crops}
         setSelectedFarmId={setSelectedFarmId}
         onClose={() => setOpenSearch(false)}
       />

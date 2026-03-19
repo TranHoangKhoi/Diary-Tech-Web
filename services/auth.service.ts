@@ -1,6 +1,6 @@
 // auth.service.ts
 
-import { API_URL } from "@/configs/appRoute";
+import { API_INTERNAL, API_URL } from "@/configs/appRoute";
 
 // export const login = async (payload: { phone: string; password: string }) => {
 //   const res = await fetch("/api/auth/login", {
@@ -32,7 +32,7 @@ export const login = async (payload) => {
 };
 
 export const getProfile = async () => {
-  const res = await fetch("/api/auth/profile", {
+  const res = await fetch(`${API_INTERNAL}/auth/profile`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });

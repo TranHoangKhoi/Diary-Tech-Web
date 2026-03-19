@@ -1,5 +1,7 @@
+import { API_INTERNAL } from "@/configs/appRoute";
+
 export const getMyFarms = async () => {
-  const res = await fetch("/api/auth/farm", {
+  const res = await fetch(`${API_INTERNAL}/auth/farm`, {
     method: "GET",
     cache: "no-store",
   });
@@ -12,7 +14,7 @@ export const getMyFarms = async () => {
 };
 
 export const getFarmsByOwner = async () => {
-  const res = await fetch("/api/owner/farm", {
+  const res = await fetch(`${API_INTERNAL}/owner/farm`, {
     method: "GET",
     cache: "no-store",
   });
@@ -25,7 +27,7 @@ export const getFarmsByOwner = async () => {
 };
 
 export const createNewAccountFarm = async (formData: FormData) => {
-  const res = await fetch("/api/account/create", {
+  const res = await fetch(`${API_INTERNAL}/account/create`, {
     method: "POST",
     body: formData,
   });

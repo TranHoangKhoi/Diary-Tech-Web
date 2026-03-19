@@ -1,5 +1,7 @@
+import { API_INTERNAL } from "@/configs/appRoute";
+
 export const getFarmType = async () => {
-  const res = await fetch(`/api/diary/farmType`, {
+  const res = await fetch(`${API_INTERNAL}/diary/farmType`, {
     cache: "no-store",
   });
 

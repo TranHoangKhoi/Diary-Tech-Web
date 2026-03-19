@@ -1,5 +1,7 @@
+import { API_INTERNAL } from "@/configs/appRoute";
+
 export const getBookByFarmId = async (farmId: string) => {
-  let url = `/api/book/${farmId}`;
+  let url = `${API_INTERNAL}/book/${farmId}`;
 
   const res = await fetch(url, {
     cache: "no-store",

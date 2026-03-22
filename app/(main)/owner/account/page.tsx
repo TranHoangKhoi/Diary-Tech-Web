@@ -1,13 +1,25 @@
-import { BsFillHouseAddFill, BsFillTelephoneFill } from "react-icons/bs";
-import { FaArrowRightLong, FaLock, FaUserLarge } from "react-icons/fa6";
-import { RiAccountCircleFill } from "react-icons/ri";
-import UploadFileField from "./components/UploadFileField";
 import FormAddAccount from "./components/FormAddAccount";
+import { fetchServer } from "@/lib/fetchServer";
+import { API_URL } from "@/configs/appRoute";
 
-const AccountPage = () => {
+const AccountPage = async () => {
+  // Thực hiện lấy dữ liệu song song trên Server cực nhanh
+  const [provincesRes, farmTypesRes] = await Promise.all([
+    fetchServer(API_URL.getProvince),
+    fetchServer(API_URL.getFarmType),
+  ]);
+
+  const provincesData = provincesRes.ok
+    ? await provincesRes.json()
+    : { data: [] };
+  const farmTypesData = farmTypesRes.ok ? await farmTypesRes.json() : [];
+
   return (
     <div className="mx-auto container">
-      <FormAddAccount />
+      <FormAddAccount
+        initialProvinces={provincesData?.data || []}
+        initialFarmTypes={farmTypesData || []}
+      />
     </div>
   );
 };

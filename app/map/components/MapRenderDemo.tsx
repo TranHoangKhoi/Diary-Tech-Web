@@ -39,6 +39,8 @@ const MapRenderDemo = (props: Props) => {
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const drawRef = useRef<MapboxDraw | null>(null);
   const [selectedFarmId, setSelectedFarmId] = useState("");
+  const [selectedWardName, setSelectedWardName] = useState("");
+  const [currentStyleId, setCurrentStyleId] = useState(1);
   const [showRiver, setShowRiver] = useState(true);
   const [farms, setFarms] = useState<IFarmMapGeomeTry | undefined>(undefined);
   const areaPopupRef = useRef<mapboxgl.Popup | null>(null);
@@ -119,6 +121,7 @@ const MapRenderDemo = (props: Props) => {
       farmHouseGeoJson: farms,
       phongDienRiver,
       setSelectedFarmId,
+      setSelectedWardName,
     };
 
     applyBaseLayers(mapRef.current, ctx);
@@ -129,6 +132,7 @@ const MapRenderDemo = (props: Props) => {
   const changeMapStyle = async (styleId: number, styleUrl: string) => {
     if (!mapRef.current) return;
 
+    setCurrentStyleId(styleId);
     mapRef.current.setStyle(styleUrl, { diff: false } as any);
 
     mapRef.current.once("style.load", async () => {
@@ -258,6 +262,9 @@ const MapRenderDemo = (props: Props) => {
         onChangeStyle={changeMapStyle}
         selectedFarmId={selectedFarmId}
         setSelectedFarmId={setSelectedFarmId}
+        selectedWardName={selectedWardName}
+        setSelectedWardName={setSelectedWardName}
+        currentStyleId={currentStyleId}
         mapRef={mapRef}
         setShowRiver={setShowRiver}
         showRiver={showRiver}

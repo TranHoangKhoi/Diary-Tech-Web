@@ -1,25 +1,21 @@
 "use client";
 
-import Image from "next/image";
-import HomeSlide from "./HomeSlide";
-import { IoLocation, IoMapSharp } from "react-icons/io5";
-import MapboxMap from "../MapboxMap/MapboxMap";
-import { FaHistory, FaStore } from "react-icons/fa";
-import { SiGoogleanalytics } from "react-icons/si";
-import { MdOutlineEventNote } from "react-icons/md";
-import { BsFillHouseAddFill } from "react-icons/bs";
-import { RiUserSettingsFill } from "react-icons/ri";
-import HomePost from "./HomePost";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import { useState } from "react";
 import MapRenderDemo from "@/app/map/components/MapRenderDemo";
+import { RootState } from "@/store";
 import Link from "next/link";
-import CropStatisticCard from "./CropStatisticCard";
+import { useState } from "react";
+import { BsFillHouseAddFill } from "react-icons/bs";
+import { FaHistory, FaStore } from "react-icons/fa";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { IoLocation, IoMapSharp } from "react-icons/io5";
+import { MdOutlineEventNote } from "react-icons/md";
+import { RiUserSettingsFill } from "react-icons/ri";
+import { SiGoogleanalytics } from "react-icons/si";
+import { useSelector } from "react-redux";
 import InsightTodayCard from "./Components/InsightTodayCard";
 import UpcomingTaskCard from "./Components/UpcomingTaskCard";
-import WeeklyKPIStrip from "./Components/WeeklyKPIStrip";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
+import CropStatisticCard from "./CropStatisticCard";
+import HomePost from "./HomePost";
 
 const HomePage = () => {
   const [isBeginning, setIsBeginning] = useState(true);

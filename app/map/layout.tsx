@@ -9,13 +9,9 @@ export const metadata = {
 };
 
 const MapLayout = async ({ children }: { children: React.ReactNode }) => {
+  // Lấy token và profile (Middleware đã đảm nhiệm việc điều hướng nếu mất token)
   // const cookieStore = cookies();
   // const token = (await cookieStore).get("token")?.value;
-
-  // if (!token) {
-  //   redirect("/login");
-  // }
-
   // const profile = await getProfileServer(token);
 
   return (

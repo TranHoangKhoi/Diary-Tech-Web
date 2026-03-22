@@ -3,6 +3,7 @@ import { CROP_CATEGORIES } from "./Data/cropCategories";
 import { Dispatch, SetStateAction } from "react";
 import phongDienOverlayJson from "@/assets/LocationJson/features.json";
 import { IFarmMapGeomeTry } from "@/types/MapType";
+import * as turf from "@turf/turf";
 
 export type MapLayerContext = {
   phongDienMask?: GeoJSON.FeatureCollection;
@@ -12,6 +13,7 @@ export type MapLayerContext = {
   farmHouseGeoJson?: GeoJSON.FeatureCollection;
   phongDienRiver?: any;
   setSelectedFarmId: Dispatch<SetStateAction<string>>;
+  setSelectedWardName?: Dispatch<SetStateAction<string>>;
 };
 
 const renderFarmHouseLayer = (map: mapboxgl.Map, ctx: MapLayerContext) => {
@@ -207,7 +209,7 @@ const renderFarmHouseLayer = (map: mapboxgl.Map, ctx: MapLayerContext) => {
           ],
         },
       },
-      "mask-outside" // 👈 QUAN TRỌNG: add BEFORE mask
+      "mask-outside", // 👈 QUAN TRỌNG: add BEFORE mask
     );
   }
 
@@ -246,7 +248,7 @@ const renderFarmHouseLayer = (map: mapboxgl.Map, ctx: MapLayerContext) => {
     if (hoveredRiverId && hoveredRiverId !== id) {
       map.setFeatureState(
         { source: "vietnam-rivers", id: hoveredRiverId },
-        { hover: false }
+        { hover: false },
       );
     }
 
@@ -261,7 +263,7 @@ const renderFarmHouseLayer = (map: mapboxgl.Map, ctx: MapLayerContext) => {
     if (hoveredRiverId) {
       map.setFeatureState(
         { source: "vietnam-rivers", id: hoveredRiverId },
-        { hover: false }
+        { hover: false },
       );
     }
 
@@ -284,7 +286,7 @@ const renderFarmHouseLayer = (map: mapboxgl.Map, ctx: MapLayerContext) => {
         <b>${props?.name ?? "Kênh / Rạch"}</b><br/>
         Loại: ${props?.waterway}
       </div>
-    `
+    `,
       )
       .addTo(map);
   });
@@ -324,11 +326,46 @@ export const MAP_STYLE_LAYERS: Record<
     if (!ctx.farmGeoJson) return;
     addFarmLayer(map, ctx.farmGeoJson);
 
+    const formatWardName = (name: string) => {
+      if (!name) return "";
+
+      return name.replace(/([a-zà-ỹ])([A-ZÀ-Ỹ])/g, "$1 $2");
+    };
+
+    const WARD_NAME_MAP: Record<string, string> = {
+      NhơnÁi: "Nhơn Ái",
+      TrườngLong: "Trường Long",
+      MỹKhánh: "Mỹ Khánh",
+      NhơnNghĩa: "Nhơn Nghĩa",
+      GiaiXuân: "Giai Xuân",
+      TânThới: "Tân Thới",
+      PhongĐiền: "Phong Điền",
+    };
+
     // ===== WARDS =====
     if (!map.getSource("phongdien-wards")) {
+      const formattedGeoJson: GeoJSON.FeatureCollection = {
+        ...ctx.phongDienWardsGeoJson,
+        features: ctx.phongDienWardsGeoJson.features.map((f) => {
+          const rawName = f.properties?.NAME_3 || "";
+
+          return {
+            ...f,
+            properties: {
+              ...f.properties,
+
+              NAME_3: rawName,
+
+              // 👇 ƯU TIÊN dùng map, fallback về regex nếu không có
+              NAME_3_LABEL: WARD_NAME_MAP[rawName] || formatWardName(rawName),
+            },
+          };
+        }),
+      };
+
       map.addSource("phongdien-wards", {
         type: "geojson",
-        data: ctx.phongDienWardsGeoJson,
+        data: formattedGeoJson,
         generateId: true,
       });
     }
@@ -354,6 +391,7 @@ export const MAP_STYLE_LAYERS: Record<
             "#D1C4E9",
             "#E0E0E0",
           ],
+
           "fill-opacity": [
             "case",
             ["boolean", ["feature-state", "hover"], false],
@@ -363,6 +401,60 @@ export const MAP_STYLE_LAYERS: Record<
         },
       });
     }
+
+    if (!map.getLayer("phongdien-ward-label")) {
+      map.addLayer({
+        id: "phongdien-ward-label",
+        type: "symbol",
+        source: "phongdien-wards",
+        layout: {
+          "text-field": ["get", "NAME_3_LABEL"],
+          // "text-size
+
+          // 👇 chỉ hiện từ zoom nhất định (tránh rối)
+          "text-size": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            8,
+            10,
+            12,
+            12,
+            14,
+            14,
+          ],
+
+          "text-anchor": "center",
+          "text-allow-overlap": false, // tránh đè chữ
+        },
+        paint: {
+          "text-color": "#000",
+          "text-halo-color": "#fff",
+          "text-halo-width": 1.5,
+        },
+      });
+    }
+
+    // ===== CLICK =====
+    map.on("click", "phongdien-ward-fill", (e) => {
+      if (!e.features?.length) return;
+      const feature = e.features[0];
+      const wardName =
+        feature.properties?.NAME_3_LABEL || feature.properties?.NAME_3;
+
+      if (ctx.setSelectedWardName) {
+        ctx.setSelectedWardName(wardName);
+      }
+
+      // Zoom và căn giữa vào vùng còn lại (không bị che bởi Sidebar/Slide)
+      const bbox = turf.bbox(feature);
+      map.fitBounds(bbox as [number, number, number, number], {
+        padding: { left: 520, right: 40, top: 40, bottom: 40 }, // Chừa 520px cho sidebar + slide
+        speed: 1.2,
+        curve: 1.42,
+        essential: true,
+      });
+    });
 
     renderOutlineBoudary(map, ctx);
   },
@@ -444,7 +536,7 @@ const renderPhongDienOverlay = (map: mapboxgl.Map, overlayJson: any) => {
 
 const addFarmLayer = (
   map: mapboxgl.Map,
-  farmGeoJson: GeoJSON.FeatureCollection
+  farmGeoJson: GeoJSON.FeatureCollection,
 ) => {
   if (!map.getSource("farms")) {
     map.addSource("farms", {
@@ -483,7 +575,7 @@ const attachWardHover = (map: mapboxgl.Map) => {
     if (hoveredWardId !== null) {
       map.setFeatureState(
         { source: "phongdien-wards", id: hoveredWardId },
-        { hover: false }
+        { hover: false },
       );
     }
 
@@ -491,7 +583,7 @@ const attachWardHover = (map: mapboxgl.Map) => {
 
     map.setFeatureState(
       { source: "phongdien-wards", id: hoveredWardId },
-      { hover: true }
+      { hover: true },
     );
 
     if (!popup) {
@@ -506,8 +598,8 @@ const attachWardHover = (map: mapboxgl.Map) => {
       .setLngLat(e.lngLat)
       .setHTML(
         `<div style="font-weight:600;font-size:13px">
-          ${feature.properties?.NAME_3}
-        </div>`
+      ${feature.properties?.NAME_3_LABEL || feature.properties?.NAME_3}
+    </div>`,
       )
       .addTo(map);
   });
@@ -516,7 +608,7 @@ const attachWardHover = (map: mapboxgl.Map) => {
     if (hoveredWardId !== null) {
       map.setFeatureState(
         { source: "phongdien-wards", id: hoveredWardId },
-        { hover: false }
+        { hover: false },
       );
     }
 
@@ -600,7 +692,7 @@ const getUnionBBox = (features: any[]) => {
 
 export const loadFarmImages = async (
   map: mapboxgl.Map,
-  farms: IFarmMapGeomeTry
+  farms: IFarmMapGeomeTry,
 ) => {
   const uniqueImages = new Map<string, string>();
 

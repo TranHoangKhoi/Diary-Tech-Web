@@ -1,6 +1,6 @@
 import { API_URL } from "@/configs/appRoute";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { fetchServer } from "@/lib/fetchServer";
 
 export const dynamic = "force-dynamic";
 
@@ -8,13 +8,6 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ farmId: string }> }
 ) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
-
-  if (!token) {
-    return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
-  }
-
   const { farmId } = await params;
 
   // ✅ Lấy query params từ URL
@@ -23,13 +16,10 @@ export async function GET(
 
   // ✅ Build lại URL backend
   const backendUrl = queryString
-    ? `${API_URL.api}${API_URL.getProductionLogs}/${farmId}?${queryString}`
-    : `${API_URL.api}${API_URL.getProductionLogs}/${farmId}`;
+    ? `${API_URL.getProductionLogs}/${farmId}?${queryString}`
+    : `${API_URL.getProductionLogs}/${farmId}`;
 
-  const res = await fetch(backendUrl, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+  const res = await fetchServer(backendUrl, {
     cache: "no-store",
   });
 

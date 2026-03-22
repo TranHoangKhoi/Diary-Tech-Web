@@ -2,8 +2,7 @@ import z from "zod/v3";
 
 export const farmSchema = z.object({
   avatar: z
-    .any()
-    .refine((file) => file instanceof File, "Vui lòng chọn ảnh đại diện"),
+    .any(),
 
   farm_name: z.string().min(2, "Tên farm quá ngắn"),
 
@@ -20,13 +19,20 @@ export const farmSchema = z.object({
     })
     .min(1, "Vui lòng chọn kiểu hộ"),
 
-  location: z.string().min(3, "Nhập địa chỉ"),
+  location: z.string(),
 
   area: z.string().min(1, "Nhập diện tích"),
+  
+  unit: z.string().optional(),
 
   name: z.string().min(2, "Nhập họ tên"),
 
-  phone: z.string().min(9, "Số điện thoại không hợp lệ"),
+  phone: z
+    .string()
+    .regex(
+      /^(03|05|07|08|09|01[2|6|8|9])+([0-9]{8})$/,
+      "Số điện thoại không hợp lệ (Ví dụ: 0912345678)"
+    ),
 
   password: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự"),
 
@@ -45,6 +51,10 @@ export const farmSchema = z.object({
       invalid_type_error: "Vui lòng chọn phường/xã",
     })
     .min(1, "Vui lòng chọn phường/xã"),
+
+  geo_location: z.any().refine((val) => val !== null && val !== undefined, "Vui lòng chọn vị trí trên bản đồ"),
+
+  polygon: z.any().refine((val) => val !== null && val !== undefined, "Vui lòng vẽ vùng trang trại"),
 
   description: z.string().optional(),
 });

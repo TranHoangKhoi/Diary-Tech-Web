@@ -43,20 +43,47 @@ const UserDropdown = ({ userData }: Props) => {
     console.log(res);
   };
 
+  const getInitial = (name: string) => {
+    return name?.charAt(0)?.toUpperCase() || "?";
+  };
+
+  const getBgColor = (name: string) => {
+    const colors = [
+      "bg-red-500",
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-yellow-500",
+      "bg-purple-500",
+      "bg-pink-500",
+    ];
+    const index = name?.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
   return (
     <div className="relative" ref={ref}>
       {/* Avatar */}
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center cursor-pointer border border-primary rounded-full"
+        className="flex items-center cursor-pointer border border-primary rounded-full overflow-hidden w-9 h-9"
       >
-        <Image
-          src={userData.avatar}
-          alt={userData.name}
-          width={36}
-          height={36}
-          className="rounded-full object-cover border w-9 h-9"
-        />
+        {userData.avatar ? (
+          <Image
+            src={userData.avatar}
+            alt={userData.name}
+            width={36}
+            height={36}
+            className="object-cover w-full h-full"
+          />
+        ) : (
+          <div
+            className={`w-full h-full flex items-center justify-center text-white font-semibold ${getBgColor(
+              userData.name,
+            )}`}
+          >
+            {getInitial(userData.name)}
+          </div>
+        )}
       </button>
 
       {/* Dropdown */}

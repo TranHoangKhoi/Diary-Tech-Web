@@ -14,9 +14,9 @@ const MainLayout = async ({ children }: { children: React.ReactNode }) => {
   console.log("cookieStore: ", JSON.stringify(cookieStore));
   console.log("token: ", token);
 
-  if (!token) {
-    redirect("/login");
-  }
+  // if (!token) {
+  //   redirect("/login");
+  // }
 
   const profile = await getProfileServer(token);
   // const profile = undefined;

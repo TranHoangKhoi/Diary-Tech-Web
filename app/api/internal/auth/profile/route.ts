@@ -1,28 +1,20 @@
 import { API_URL } from "@/configs/appRoute";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { fetchServer } from "@/lib/fetchServer";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const cookieStore = cookies();
-  const token = (await cookieStore).get("token")?.value;
-
-  if (!token) {
-    return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
-  }
-
-  const res = await fetch(`${API_URL.api}${API_URL.getProfile}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+  // Thay vì lấy cookies, token và tự set Header, chúng ta chỉ cần gọi fetchServer cực ngắn gọn
+  const res = await fetchServer(API_URL.getProfile, {
     method: "GET",
   });
 
   const data = await res.json();
 
   if (!res.ok) {
-    return NextResponse.json({ message: "Invalid token" }, { status: 401 });
+    // Nếu Unauthorized (lỗi token), backend có thể trả 401
+    return NextResponse.json({ message: "Invalid token" }, { status: res.status });
   }
 
   return NextResponse.json(data);

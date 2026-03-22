@@ -12,8 +12,8 @@ export const appRoute = {
 export const API_INTERNAL = "/api/internal";
 
 export const API_URL = {
-  // api: "http://localhost:5000/",
-  api: "https://diarytech.bittechx.cloud/",
+  api: "http://localhost:5000/",
+  // api: "https://diarytech.bittechx.cloud/",
   // Auth
   login: "api/auth/login",
   getProfile: "api/auth/profile",

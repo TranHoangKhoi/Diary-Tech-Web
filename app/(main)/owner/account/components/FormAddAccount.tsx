@@ -4,9 +4,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { BsFillHouseAddFill, BsFillTelephoneFill } from "react-icons/bs";
 import UploadFileField from "./UploadFileField";
 import { RiAccountCircleFill } from "react-icons/ri";
-import { FaArrowRightLong, FaLock, FaUserLarge } from "react-icons/fa6";
+import { FaArrowRightLong, FaLock, FaUserLarge, FaEye, FaEyeSlash } from "react-icons/fa6";
 import MapPicker from "./MapPicker";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { farmSchema } from "./validateFormAdd";
 import { getFarmType } from "@/services/farmType.service";
@@ -27,22 +27,22 @@ const areaValue = [
   { value: "m²", label: "Mét vuông (m²)" },
 ];
 
-const FormAddAccount = () => {
+interface FormAddAccountProps {
+  initialProvinces: IProvince[];
+  initialFarmTypes: IFarmType[];
+}
+
+const FormAddAccount = ({ initialProvinces, initialFarmTypes }: FormAddAccountProps) => {
   const router = useRouter();
   const [geoLocation, setGeoLocation] = useState<[number, number] | null>(null);
   const [polygon, setPolygon] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [farmTypes, setFarmTypes] = useState<IFarmType[]>([]);
-  const [provinces, setProvinces] = useState<IProvince[]>([]);
   const [wards, setWards] = useState<IWard[]>([]);
-  const [selectedWard, setSelectedWard] = useState<any>(null);
-  const [selectedProvince, setSelectedProvince] = useState<any>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [areaValueSelect, setAreaValueSelect] = useState(areaValue[0]);
   const [serverError, setServerError] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [crops, setCrops] = useState<any[]>([]);
-  const [selectedCrop, setSelectedCrop] = useState<any>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const mapRef = useRef<any>(null);
   const { setFocus } = useForm();
@@ -65,6 +65,7 @@ const FormAddAccount = () => {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     setValue,
     reset,
@@ -72,13 +73,13 @@ const FormAddAccount = () => {
     resolver: zodResolver(farmSchema),
   });
 
-  const optionsProvince = provinces.map((p) => ({
+  const optionsProvince = initialProvinces.map((p) => ({
     value: p.province_code,
     label: p.name,
     data: p,
   }));
 
-  const optionsFarmType = farmTypes.map((p) => ({
+  const optionsFarmType = initialFarmTypes.map((p) => ({
     value: p._id,
     label: p.type_name,
   }));
@@ -124,14 +125,22 @@ const FormAddAccount = () => {
     setAvatarFile(null);
     setPolygon(null);
     setGeoLocation(null);
-    setSelectedProvince(null);
-    setSelectedWard(null);
     setServerError(null);
 
     mapRef.current?.resetMap();
     uploadRef.current?.reset(); // 👈 reset preview
 
     setShowSuccessDialog(false);
+  };
+
+  const handleGeneratePassword = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setValue("password", password, { shouldValidate: true });
+    setShowPassword(true);
   };
 
   const handleBack = () => {
@@ -158,7 +167,7 @@ const FormAddAccount = () => {
       formData.append("location", data.location);
       formData.append("description", data.description || "");
       formData.append("area", data.area);
-      formData.append("unit", areaValueSelect.value);
+      formData.append("unit", data.unit || "ha");
 
       formData.append("name", data.name);
       formData.append("phone", data.phone);
@@ -175,11 +184,13 @@ const FormAddAccount = () => {
         formData.append("polygon", JSON.stringify(polygon));
       }
 
-      formData.append("province", JSON.stringify(selectedProvince.data));
-      formData.append("ward", JSON.stringify(selectedWard.data));
+      const provData = optionsProvince.find(p => p.value === data.province_code)?.data;
+      const wardData = optionsWard.find(w => w.value === data.ward_code)?.data;
+      if (provData) formData.append("province", JSON.stringify(provData));
+      if (wardData) formData.append("ward", JSON.stringify(wardData));
 
       // gửi URL thay vì file
-      formData.append("image", avatarUrl);
+      formData.append("avatar", avatarUrl);
 
       const res = await createNewAccountFarm(formData);
 
@@ -195,34 +206,7 @@ const FormAddAccount = () => {
     }
   };
 
-  useEffect(() => {
-    const handleGetFarmType = async () => {
-      try {
-        // setLoading(true);
-        const res = await getFarmType();
-        setFarmTypes(res);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        // setLoading(false);
-      }
-    };
-
-    const handleGetProvince = async () => {
-      try {
-        // setLoading(true);
-        const res = await getProvince();
-        setProvinces(res.data);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        // setLoading(false);
-      }
-    };
-
-    handleGetProvince();
-    handleGetFarmType();
-  }, []);
+  // Bỏ hẳn useEffect gọi Tỉnh và FarmType đi, nó đã được Server lo!
 
   return (
     <main className="w-full py-7">
@@ -280,11 +264,6 @@ const FormAddAccount = () => {
                     }}
                   />
                 </div>
-                {errors.avatar && (
-                  <p className="text-red-500 text-xs">
-                    {errors.avatar.message as string}
-                  </p>
-                )}
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 {/* Farm Name */}
@@ -311,26 +290,25 @@ const FormAddAccount = () => {
                   <label className="text-sm font-semibold text-black dark:text-slate-300">
                     Kiểu hộ
                   </label>
-                  <Select
-                    options={optionsFarmType}
-                    className="bg-secondary text-sm"
-                    styles={{
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                    }}
-                    placeholder="Chọ kiểu hộ kinh doanh"
-                    onChange={(value) => {
-                      const farmTypeId = value?.value as string;
-
-                      setValue("farm_type_id", farmTypeId, {
-                        shouldValidate: true,
-                      });
-
-                      handleGetFarmCrops(farmTypeId);
-                      setSelectedCrop(null);
-                      setCrops([]);
-
-                      setValue("crop_id", "");
-                    }}
+                  <Controller
+                    name="farm_type_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        options={optionsFarmType}
+                        className="bg-secondary text-sm"
+                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                        placeholder="Chọn kiểu hộ kinh doanh"
+                        value={optionsFarmType.find(c => c.value === field.value)}
+                        onChange={(val) => {
+                          field.onChange(val?.value);
+                          handleGetFarmCrops(val?.value as string);
+                          setCrops([]);
+                          setValue("crop_id", "");
+                        }}
+                      />
+                    )}
                   />
                   {errors.farm_type_id && (
                     <p className="text-red-500 text-xs">
@@ -344,22 +322,21 @@ const FormAddAccount = () => {
                   <label className="text-sm font-semibold text-black dark:text-slate-300">
                     Loại hình
                   </label>
-                  <Select
-                    options={optionsCrops}
-                    value={selectedCrop}
-                    isDisabled={!crops.length}
-                    className="bg-secondary text-sm"
-                    styles={{
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                    }}
-                    placeholder="Chọn loại hình"
-                    onChange={(value) => {
-                      setSelectedCrop(value);
-
-                      setValue("crop_id", value?.value, {
-                        shouldValidate: true,
-                      });
-                    }}
+                  <Controller
+                    name="crop_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        options={optionsCrops}
+                        isDisabled={!crops.length}
+                        className="bg-secondary text-sm"
+                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                        placeholder="Chọn loại hình"
+                        value={optionsCrops.find(c => c.value === field.value) || null}
+                        onChange={(val) => field.onChange(val?.value)}
+                      />
+                    )}
                   />
                   {errors.crop_id && (
                     <p className="text-red-500 text-xs">
@@ -389,16 +366,9 @@ const FormAddAccount = () => {
                     </div>
 
                     <select
+                      {...register("unit")}
+                      defaultValue="ha"
                       className="rounded-lg shadow py-2 px-4 text-sm text-black outline-none border border-gray-200 bg-secondary/50 h-9.5"
-                      value={areaValueSelect.value}
-                      onChange={(e) => {
-                        const selected = areaValue.find(
-                          (item) => item.value === e.target.value
-                        );
-                        if (selected) {
-                          setAreaValueSelect(selected);
-                        }
-                      }}
                     >
                       {areaValue.map((item, index) => (
                         <option key={index} value={item.value}>
@@ -415,28 +385,24 @@ const FormAddAccount = () => {
                   <label className="text-sm font-semibold text-black dark:text-slate-300">
                     Tỉnh / Thành phố
                   </label>
-                  <Select
-                    options={optionsProvince}
-                    placeholder="Chọn tỉnh thành..."
-                    menuPortalTarget={
-                      typeof window !== "undefined" ? document.body : null
-                    }
-                    styles={{
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                    }}
-                    value={selectedProvince}
-                    onChange={(option) => {
-                      setSelectedProvince(option);
-
-                      setValue("province_code", option.value, {
-                        shouldValidate: true,
-                      });
-
-                      setSelectedWard(null);
-                      setValue("ward_code", "");
-
-                      handleGetWards(option.value);
-                    }}
+                  <Controller
+                    name="province_code"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        options={optionsProvince}
+                        placeholder="Chọn tỉnh thành..."
+                        menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                        value={optionsProvince.find(c => c.value === field.value)}
+                        onChange={(val) => {
+                          field.onChange(val?.value);
+                          setValue("ward_code", "");
+                          handleGetWards(val?.value);
+                        }}
+                      />
+                    )}
                   />
 
                   {errors.province_code && (
@@ -449,24 +415,21 @@ const FormAddAccount = () => {
                   <label className="text-sm font-semibold text-black dark:text-slate-300">
                     Quận / Huyện
                   </label>
-                  <Select
-                    options={optionsWard}
-                    value={selectedWard}
-                    placeholder="Chọn phường/xã..."
-                    isDisabled={!wards.length}
-                    menuPortalTarget={
-                      typeof window !== "undefined" ? document.body : null
-                    }
-                    styles={{
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                    }}
-                    onChange={(option) => {
-                      setSelectedWard(option);
-
-                      setValue("ward_code", option.value, {
-                        shouldValidate: true,
-                      });
-                    }}
+                  <Controller
+                    name="ward_code"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        options={optionsWard}
+                        placeholder="Chọn phường/xã..."
+                        isDisabled={!wards.length}
+                        menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                        value={optionsWard.find(c => c.value === field.value) || null}
+                        onChange={(val) => field.onChange(val?.value)}
+                      />
+                    )}
                   />
                   {errors.ward_code && (
                     <p className="text-red-500 text-xs">
@@ -496,12 +459,18 @@ const FormAddAccount = () => {
                 <label className="text-sm font-semibold text-black dark:text-slate-300">
                   Tọa độ
                 </label>
-                <div className="relative w-full h-100 rounded-xl overflow-hidden border border-primary/20 map-placeholder">
+                <div className={`relative w-full h-100 rounded-xl overflow-hidden border ${errors.geo_location || errors.polygon ? "border-red-500" : "border-primary/20"} map-placeholder`}>
                   <MapPicker
                     ref={mapRef}
                     onChange={(data) => {
-                      if (data.point) setGeoLocation(data.point);
-                      if (data.polygon) setPolygon(data.polygon);
+                      if (data.point) {
+                        setGeoLocation(data.point);
+                        setValue("geo_location", data.point, { shouldValidate: true });
+                      }
+                      if (data.polygon) {
+                        setPolygon(data.polygon);
+                        setValue("polygon", data.polygon, { shouldValidate: true });
+                      }
                     }}
                   />
 
@@ -527,6 +496,18 @@ const FormAddAccount = () => {
                       Tọa độ của tôi
                     </button>
                   </div>
+                </div>
+                <div className="flex gap-4 px-2">
+                  {errors.geo_location && (
+                    <p className="text-red-500 text-xs">
+                      {errors.geo_location.message as string}
+                    </p>
+                  )}
+                  {errors.polygon && (
+                    <p className="text-red-500 text-xs">
+                      {errors.polygon.message as string}
+                    </p>
+                  )}
                 </div>
               </div>
               {/* Description */}
@@ -608,19 +589,39 @@ const FormAddAccount = () => {
               </div>
               {/* Password */}
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-black dark:text-slate-300">
-                  Mật khẩu
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold text-black dark:text-slate-300">
+                    Mật khẩu
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGeneratePassword}
+                    className="text-xs text-primary cursor-pointer hover:underline font-medium"
+                  >
+                    Tạo mật khẩu ngẫu nhiên
+                  </button>
+                </div>
                 <div className="relative">
                   <div className="absolute top-0 bottom-0 left-3 items-center justify-center flex">
                     <FaLock className="text-gray-500" size={14} />
                   </div>
                   <input
                     {...register("password")}
-                    className="rounded-lg shadow py-2 px-4 text-sm text-black outline-none border border-gray-200 bg-secondary/50 w-full pl-10"
+                    className="rounded-lg shadow py-2 px-4 text-sm text-black outline-none border border-gray-200 bg-secondary/50 w-full pl-10 pr-10"
                     placeholder="••••••••"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute top-0 bottom-0 text-sm right-3 flex items-center justify-center text-gray-500 hover:text-primary cursor-pointer"
+                  >
+                    {showPassword ? (
+                      <FaEyeSlash size={16} />
+                    ) : (
+                      <FaEye size={16} />
+                    )}
+                  </button>
                 </div>
                 {errors.password && (
                   <p className="text-red-500 text-xs pt-1">

@@ -27,6 +27,8 @@ import DiaryDetailsCPT from "../../owner/diary/[id]/components/DiaryDetailsCPT";
 import LogsRecent from "../../owner/diary/[id]/components/LogsRecent";
 import TitleDetails from "../../owner/diary/[id]/components/TitleDetails";
 import UserCreate from "../../owner/diary/[id]/components/UserCreate";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 interface Props {}
 
@@ -82,6 +84,10 @@ const SkeletonRecentActivities = () => {
 };
 
 const DetailsDiaryContent = (props: Props) => {
+  const userProfile = useSelector(
+    (state: RootState) => state.userProfile.profile,
+  );
+
   const params = useParams();
   const idDiary = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -99,8 +105,17 @@ const DetailsDiaryContent = (props: Props) => {
 
   const formatRecentActivities = (logs: any[]) => {
     return logs.map((item) => {
-      const description =
-        item.notes || Object.values(item.data || {})[0] || "Không có mô tả";
+      const desNote = `Hoạt động ${item.activity_id?.activity_name} đã được cập nhật vào ngày ${new Date(
+        item.created_at,
+      ).toLocaleString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })}`;
+
+      const description = item.notes || desNote;
 
       return {
         id: item._id,
@@ -145,7 +160,7 @@ const DetailsDiaryContent = (props: Props) => {
           const resDiaryRecent = await getProductionLogsRecent(
             diaryData?.farm_id?._id,
             3,
-            idDiary
+            idDiary,
           );
           setLogRecent(resDiaryRecent.data);
         } catch (error) {
@@ -163,7 +178,7 @@ const DetailsDiaryContent = (props: Props) => {
         try {
           setLoadingActivities(true);
           const resActivities = await getActivitiesByFarmTypeId(
-            diaryData?.activity_id?.farm_type_id?._id
+            diaryData?.activity_id?.farm_type_id?._id,
           );
           setActivities(resActivities);
         } catch (error) {
@@ -261,6 +276,7 @@ const DetailsDiaryContent = (props: Props) => {
               <LogsRecent
                 activitiesLog={activitiesLog}
                 activities={activities}
+                userProfile={userProfile}
               />
             )}
 

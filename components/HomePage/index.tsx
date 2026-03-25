@@ -3,31 +3,55 @@
 import MapRenderDemo from "@/app/map/components/MapRenderDemo";
 import { RootState } from "@/store";
 import Link from "next/link";
-import { useState } from "react";
 import { BsFillHouseAddFill } from "react-icons/bs";
 import { FaHistory, FaStore } from "react-icons/fa";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { IoLocation, IoMapSharp } from "react-icons/io5";
 import { MdOutlineEventNote } from "react-icons/md";
 import { RiUserSettingsFill } from "react-icons/ri";
 import { SiGoogleanalytics } from "react-icons/si";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { getOwnerStatistics } from "@/services/owner.service";
+import { TypeOwnerStatistics } from "@/types/TypeStatistics";
 import InsightTodayCard from "./Components/InsightTodayCard";
 import UpcomingTaskCard from "./Components/UpcomingTaskCard";
 import CropStatisticCard from "./CropStatisticCard";
 import HomePost from "./HomePost";
+import RecentActivities from "./RecentActivities";
 
 const HomePage = () => {
-  const [isBeginning, setIsBeginning] = useState(true);
-  const [isEnd, setIsEnd] = useState(false);
-
   const userProfile = useSelector(
-    (state: RootState) => state.userProfile.profile
+    (state: RootState) => state.userProfile.profile,
   );
 
   const currentFarm = useSelector((state: RootState) => state.farm.currentFarm);
 
   const now = new Date();
+
+  const [statistics, setStatistics] = useState<TypeOwnerStatistics | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const response = await getOwnerStatistics();
+        if (response.success && response.data) {
+          setStatistics(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching statistics:", error);
+      }
+    };
+
+    if (
+      userProfile?.role === "owner" ||
+      userProfile?.role === "admin" ||
+      userProfile?.role === "superadmin"
+    ) {
+      fetchStatistics();
+    }
+  }, [userProfile]);
 
   const day = now.getDate().toString().padStart(2, "0");
   const month = (now.getMonth() + 1).toString().padStart(2, "0");
@@ -39,13 +63,6 @@ const HomePage = () => {
         {/* Banner Hello */}
         <div className="relative">
           <div className="relative w-full h-40 rounded-2xl overflow-hidden">
-            {/* <Image
-              src={"/assets/ImageApp/strawberrField.jpg"}
-              alt="bgnn"
-              fill
-              className="object-cover"
-              priority
-            /> */}
             <video
               src="https://res.cloudinary.com/delix6nht/video/upload/v1770301679/13505202-uhd_2560_1440_30fps_bsfkuq.mp4"
               autoPlay
@@ -159,103 +176,94 @@ const HomePage = () => {
           {/* Left Side */}
           <div className="col-span-1 flex flex-col gap-6">
             {/* Left - Top Side */}
-            <div className="bg-background shadow-xl drop-shadow rounded-xl px-4 py-4">
-              <div className="flex gap-2 items-center justify-between">
-                <p className="text-black text-lg font-medium">
-                  Hoạt động gần đây
-                </p>
-                <div className="bg-primary/10 w-8 h-8 items-center justify-center flex rounded">
-                  <FaHistory size={18} className="text-primary" />
-                </div>
-              </div>
-              <div className="pt-6 flex flex-col gap-1">
-                <div className="flex gap-4">
-                  <div className="w-2 h-2 bg-primary rounded-full translate-y-1.5" />
-                  <div className="flex flex-col gap-1">
-                    <p className="font-medium text-black text-sm line-clamp-1">
-                      Bón phân đợt 2
-                    </p>
-                    <p className="text-gray-500 text-xs line-clamp-1">
-                      27/09/2026 - 09:30
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="w-2 h-2 bg-primary/50 rounded-full translate-y-1.5" />
-                  <div className="flex flex-col gap-1">
-                    <p className="font-medium text-black text-sm line-clamp-1">
-                      Phun thuốc trừ sâu hại
-                    </p>
-                    <p className="text-gray-500 text-xs line-clamp-1">
-                      27/09/2026 - 09:30
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="w-2 h-2 bg-primary/50 rounded-full translate-y-1.5" />
-                  <div className="flex flex-col gap-1">
-                    <p className="font-medium text-black text-sm line-clamp-1">
-                      Bón phân kali và thuốc dưỡng lá
-                    </p>
-                    <p className="text-gray-500 text-xs line-clamp-1">
-                      27/09/2026 - 09:30
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="pt-6">
-                <button className="h-9 w-full bg-primary shadow drop-shadow-2xl rounded-lg">
-                  <span className="text-white text-sm font-medium">
-                    Xem nhật ký
-                  </span>
-                </button>
-              </div>
-            </div>
+            <InsightTodayCard todayInsights={statistics?.todayInsights} />
+            <RecentActivities />
+            {/* <UpcomingTaskCard /> */}
+          </div>
+        </div>
 
-            {/* Left - Bottom Side */}
-            {/* Left - Bottom Side : Báo cáo thống kê */}
-            <div className="bg-background shadow-xl drop-shadow rounded-xl px-4 py-4">
+        <div className="grid grid-cols-3 gap-4 mt-4 pb-10 items-stretch">
+          <div className="col-span-2">
+            <CropStatisticCard
+              cropStructure={statistics?.cropStructure}
+              totalFarms={statistics?.totalFarms}
+              totalArea={statistics?.totalArea}
+            />
+          </div>
+          <div className="col-span-1 space-y-4">
+            <div className="bg-background shadow-xl drop-shadow rounded-xl px-4 py-4  h-full flex flex-col justify-between">
               {/* Header */}
-              <div className="flex gap-2 items-center justify-between">
-                <p className="text-black text-lg font-medium">
-                  Báo cáo thống kê
-                </p>
-                <div className="bg-primary/10 w-8 h-8 items-center justify-center flex rounded">
-                  <SiGoogleanalytics size={18} className="text-primary" />
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="pt-6 flex flex-col gap-4">
-                {/* Item */}
-                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                  <p className="text-sm text-gray-600">Tổng số hộ</p>
-                  <p className="font-semibold text-black">60 hộ</p>
+              <div className="flex-1">
+                <div className="flex gap-2 items-center justify-between">
+                  <p className="text-black text-lg font-medium">
+                    Báo cáo thống kê
+                  </p>
+                  <div className="bg-primary/10 w-8 h-8 items-center justify-center flex rounded">
+                    <SiGoogleanalytics size={18} className="text-primary" />
+                  </div>
                 </div>
 
-                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                  <p className="text-sm text-gray-600">Diện tích canh tác</p>
-                  <p className="font-semibold text-black">143.0 ha</p>
-                </div>
+                {/* Content */}
+                <div className="pt-6 flex flex-col gap-4">
+                  {/* Item */}
+                  <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                    <p className="text-sm text-gray-600">Tổng số hộ</p>
+                    <p className="font-semibold text-black">
+                      {statistics?.totalSubAccounts || 0} hộ
+                    </p>
+                  </div>
 
-                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                  <p className="text-sm text-gray-600">Farm đang hiển thị</p>
-                  <p className="font-semibold text-primary">60 / 60</p>
-                </div>
+                  <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                    <p className="text-sm text-gray-600">Diện tích canh tác</p>
+                    <p className="font-semibold text-black">
+                      {statistics?.totalArea?.value
+                        ? statistics.totalArea.value.toLocaleString("vi-VN")
+                        : 0}{" "}
+                      {statistics?.totalArea?.unit || "ha"}
+                    </p>
+                  </div>
 
-                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                  <p className="text-sm text-gray-600">Cây trồng chính</p>
-                  <p className="font-semibold text-black">Sầu riêng</p>
-                </div>
+                  <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                    <p className="text-sm text-gray-600">
+                      Tổng nông trại hiển thị
+                    </p>
+                    <p className="font-semibold text-primary">
+                      {statistics?.totalFarms || 0}
+                    </p>
+                  </div>
 
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-gray-600">Xã nhiều hộ nhất</p>
-                  <p className="font-semibold text-black">Mỹ Khánh</p>
+                  <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                    <p className="text-sm text-gray-600">
+                      Diện tích nhiều nhất
+                    </p>
+                    <p className="font-semibold text-black">
+                      {statistics?.cropStructure?.length
+                        ? statistics.cropStructure.reduce(
+                            (prev, current) =>
+                              prev.percentage > current.percentage
+                                ? prev
+                                : current,
+                            statistics.cropStructure[0],
+                          ).cropName
+                        : "Chưa xác định"}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-gray-600">
+                      Tỉ lệ farm đang hoạt động
+                    </p>
+                    <p className="font-semibold text-black">
+                      {statistics?.activeRate
+                        ? `${statistics.activeRate}%`
+                        : "0%"}
+                    </p>
+                  </div>
                 </div>
               </div>
 
               {/* Action */}
-              <div className="pt-5">
+              <div className="pt-5 mt-auto">
                 <button className="h-9 w-full bg-primary shadow drop-shadow-2xl rounded-lg">
                   <span className="text-white text-sm font-medium">
                     Xem báo cáo chi tiết
@@ -266,45 +274,9 @@ const HomePage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mt-4 pb-10">
-          <div className="col-span-2">
-            <CropStatisticCard />
-          </div>
-          <div className="col-span-1 space-y-4">
-            <InsightTodayCard />
-            <UpcomingTaskCard />
-          </div>
-        </div>
-
         {/* Post */}
         <div className="bg-white shadow-lg drop-shadow-2xl py-4 pb-1 px-4 rounded-2xl">
-          <div className="">
-            <div className="flex items-center justify-between">
-              <p className="text-black text-lg font-medium">Tin tức mới nhất</p>
-              <div className="">
-                <button
-                  className={`home-prev nav-btn left p-2 cursor-pointer text-primary ${
-                    isBeginning ? "opacity-40 cursor-none" : ""
-                  }`}
-                  disabled={isBeginning}
-                >
-                  <FiChevronLeft size={20} />
-                </button>
-
-                <button
-                  className={`home-next nav-btn right p-2 cursor-pointer text-primary ${
-                    isEnd ? "opacity-40 cursor-none" : ""
-                  }`}
-                  disabled={isEnd}
-                >
-                  <FiChevronRight size={20} />
-                </button>
-              </div>
-            </div>
-            <div className="pt-6 ">
-              <HomePost setIsBeginning={setIsBeginning} setIsEnd={setIsEnd} />
-            </div>
-          </div>
+          <HomePost />
         </div>
       </div>
 

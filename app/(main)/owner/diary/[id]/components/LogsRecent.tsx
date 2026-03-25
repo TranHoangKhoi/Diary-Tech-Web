@@ -1,8 +1,9 @@
 import EmptyIcon from "@/assets/icon/empty.png";
-import { appRoute } from "@/configs/appRoute";
 import { IActivities } from "@/types/TypeActitvities";
+import { IUserProfile } from "@/types/TypeUser";
 import Image from "next/image";
 import Link from "next/link";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Props {
   activitiesLog: {
@@ -14,10 +15,12 @@ interface Props {
     avatar: any;
   }[];
   activities: IActivities[];
+  userProfile: IUserProfile;
 }
 
 const LogsRecent = (props: Props) => {
-  const { activitiesLog, activities } = props;
+  const { activitiesLog, activities, userProfile } = props;
+  const { getDiaryDetailsPath } = usePermissions(userProfile?.role);
 
   return (
     <div className="bg-white shadow drop-shadow px-4 py-4 pb-10 rounded-xl">
@@ -51,7 +54,9 @@ const LogsRecent = (props: Props) => {
                     <div className="w-1 h-1 bg-gray-400 rounded-4xl" />
                     <p className="text-xs text-gray-500">{item.time}</p>
                   </div>
-                  <Link href={`${appRoute.diary}/${item.id}`}>
+                  <Link
+                    href={getDiaryDetailsPath(item.id)}
+                  >
                     <div className="flex flex-col gap-2">
                       <p className="text-sm font-semibold text-black">
                         {item.title}

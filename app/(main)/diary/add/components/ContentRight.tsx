@@ -87,7 +87,7 @@ const ContentRight = (props: Props) => {
       notes: z.string().optional(),
     });
     const userData = useSelector(
-      (state: RootState) => state.userProfile.profile
+      (state: RootState) => state.userProfile.profile,
     );
 
     const { uploadImages, progress, uploaded, total, uploading, error } =
@@ -110,11 +110,11 @@ const ContentRight = (props: Props) => {
     });
 
     const normalFields = selectedActivity?.fields?.filter(
-      (f) => f.field_type !== "image"
+      (f) => f.field_type !== "image",
     );
 
     const imageFields = selectedActivity?.fields?.filter(
-      (f) => f.field_type === "image"
+      (f) => f.field_type === "image",
     );
 
     const resetValues: any = {

@@ -17,7 +17,7 @@ interface Props {
 
 export const getFarmPointById = (farmId: string) => {
   return farmHouseGeoJson.features.find(
-    (f) => f.geometry.type === "Point" && f.id === farmId
+    (f) => f.geometry.type === "Point" && f.id === farmId,
   );
 };
 
@@ -75,10 +75,6 @@ const FarmSearchFilter = (props: Props) => {
     setSelectedFarmId(farm.id);
     onClose();
   };
-
-  useEffect(() => {
-    console.log("farmList: ", farmList);
-  }, [farmList]);
 
   return (
     <>

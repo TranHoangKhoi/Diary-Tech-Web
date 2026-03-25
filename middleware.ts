@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 // 1. Phân loại các đường dẫn (Routes)
 // Các trang chỉ dành cho khách (chưa đăng nhập) mới được vào
-const publicPaths = ["/login", "/register"];
+const publicPaths = ["/login", "/register", "/map/gps-polygon"];
 
 // Định nghĩa các route bỏ qua (không chạy middleware để tăng tốc)
 // Ví dụ: ảnh, favicon, file css/js, và các API nội bộ

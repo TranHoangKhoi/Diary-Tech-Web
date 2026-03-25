@@ -5,6 +5,7 @@ import Link from "next/link";
 import React from "react";
 import { FaRegCalendar } from "react-icons/fa6";
 import { MdOutlineAddCircle } from "react-icons/md";
+import Can from "@/components/Can";
 
 interface Props {
   diaryData: IProductionLog;
@@ -27,6 +28,7 @@ const TitleDetails = (props: Props) => {
         </div>
       </div>
       <div className="">
+        {/* <Can action="canAddNewActivity"> */}
         <Link
           href={linkAdd ? linkAdd : appRoute.addDiary}
           className="bg-primary px-4 py-2 rounded-full flex items-center gap-2 cursor-pointer hover:opacity-70"
@@ -36,6 +38,7 @@ const TitleDetails = (props: Props) => {
             Thêm hoạt động mới
           </span>
         </Link>
+        {/* </Can> */}
       </div>
     </div>
   );

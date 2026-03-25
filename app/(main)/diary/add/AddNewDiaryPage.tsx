@@ -20,7 +20,7 @@ const AddNewDiaryPage = () => {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedActivity, setSelectedActivity] = useState<IActivities | null>(
-    null
+    null,
   );
   const [selectedDiary, setSelectedDiary] = useState<any>(null);
   const addId = searchParams.get("addId");
@@ -32,7 +32,7 @@ const AddNewDiaryPage = () => {
       const handleGetActivities = async () => {
         setLoading(true);
         const res = await getActivitiesByFarmTypeId(
-          currentFarm?.farm_type_id?._id
+          currentFarm?.farm_type_id?._id,
         );
         setActivities(res);
         setLoading(false);

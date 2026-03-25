@@ -22,6 +22,9 @@ import { generateSchema } from "@/app/(main)/diary/add/components/validateForm";
 import StepChooseFarm from "./StepChooseFarm";
 import StepAddForm from "./StepAddForm";
 import SelectedFarmCard from "./SelectedFarmCard";
+import Link from "next/link";
+import { IoArrowBack } from "react-icons/io5";
+import { useRouter } from "next/navigation";
 
 interface Props {
   currentStep: number;
@@ -54,13 +57,15 @@ const ContentRight = (props: Props) => {
 
   if (currentStep === 1) {
     return (
-      <StepChooseFarm
-        farms={farms}
-        onSelect={(farm) => {
-          setSelectedFarm(farm);
-          setCurrentStep(2);
-        }}
-      />
+      <>
+        <StepChooseFarm
+          farms={farms}
+          onSelect={(farm) => {
+            setSelectedFarm(farm);
+            setCurrentStep(2);
+          }}
+        />
+      </>
     );
   }
 

@@ -1,4 +1,6 @@
 import { IActivities } from "@/types/TypeActitvities";
+import { useRouter } from "next/navigation";
+import { IoArrowBack } from "react-icons/io5";
 
 interface Props {
   activities: IActivities[];
@@ -7,9 +9,16 @@ interface Props {
 
 const StepChooseActivity = (props: Props) => {
   const { activities, onSelect } = props;
-
+  const router = useRouter();
   return (
-    <div className="lg:col-span-3">
+    <div className="lg:col-span-3 flex flex-col gap-3">
+      <button
+        onClick={() => router.back()}
+        className={`flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-black transition cursor-pointer`}
+      >
+        <IoArrowBack size={18} />
+        Quay lại
+      </button>
       <div className="bg-white rounded-3xl overflow-hidden shadow drop-shadow-xl px-4 py-4">
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
           {activities.map((activity) => (

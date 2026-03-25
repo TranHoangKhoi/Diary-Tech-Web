@@ -30,10 +30,11 @@ mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 interface Props {
   dataMap: IMapItem[];
   height?: number;
+  focusLocation?: [number, number];
 }
 
 const MapRenderDemo = (props: Props) => {
-  const { dataMap, height } = props;
+  const { dataMap, height, focusLocation } = props;
   const userData = useSelector((state: RootState) => state.userProfile.profile);
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -66,7 +67,7 @@ const MapRenderDemo = (props: Props) => {
     features: (VietNamDistrict as GeoJSON.FeatureCollection).features.filter(
       (f: any) =>
         f.properties?.NAME_1 === "CầnThơ" &&
-        f.properties?.NAME_2 === "PhongĐiền"
+        f.properties?.NAME_2 === "PhongĐiền",
     ),
   };
 
@@ -99,7 +100,7 @@ const MapRenderDemo = (props: Props) => {
       .filter(
         (f: any) =>
           f.properties?.NAME_1 === "CầnThơ" &&
-          f.properties?.NAME_2 === "PhongĐiền"
+          f.properties?.NAME_2 === "PhongĐiền",
       )
       .map((f: any, idx: number) => ({
         type: "Feature",
@@ -159,7 +160,7 @@ const MapRenderDemo = (props: Props) => {
         mapRef.current.setLayoutProperty(
           riverLayerId,
           "visibility",
-          forceShowRiver ? "visible" : "none"
+          forceShowRiver ? "visible" : "none",
         );
       }
     });
@@ -233,7 +234,7 @@ const MapRenderDemo = (props: Props) => {
           [105.58, 9.94],
           [105.74, 10.06],
         ],
-        { padding: 40 }
+        { padding: 40 },
       );
     });
 
@@ -249,6 +250,20 @@ const MapRenderDemo = (props: Props) => {
       mapRef.current = null; // 👈 BẮT BUỘC
     };
   }, []);
+
+  useEffect(() => {
+    if (!mapRef.current || !focusLocation) return;
+
+    const map = mapRef.current;
+
+    map.flyTo({
+      center: focusLocation,
+      zoom: 15,
+      essential: true,
+    });
+
+    changeMapStyle(2, "mapbox://styles/mapbox/satellite-streets-v12");
+  }, [focusLocation]);
 
   return (
     <div

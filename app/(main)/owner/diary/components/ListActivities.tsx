@@ -26,7 +26,7 @@ const getImagesFromData = (data: Record<string, any>) => {
       Array.isArray(value) &&
       value.length > 0 &&
       typeof value[0] === "string" &&
-      value[0].startsWith("http")
+      value[0].startsWith("http"),
   );
 
   return imageField || [];
@@ -93,7 +93,7 @@ const ListActivities = (props: Props) => {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold flex items-center gap-2">
             <MdOutlineMenuBook className="text-primary" size={22} />
-            Danh sách Nhật ký (24)
+            Danh sách Nhật ký ({pagination?.total || 0})
           </h3>
           <div className="flex bg-slate-200 dark:bg-slate-800 p-2 rounded-lg">
             <button className="px-3 py-1 text-sm font-bold bg-white dark:bg-slate-700 rounded shadow-sm gap-1.5  flex items-center">
@@ -230,9 +230,9 @@ const ListActivities = (props: Props) => {
             <FaHistory className="text-black" size={16} />
             Hoạt động Gần đây
           </h3>
-          <button className="text-xs font-bold text-primary uppercase hover:underline">
+          {/* <button className="text-xs font-bold text-primary uppercase hover:underline">
             Xem tất cả
-          </button>
+          </button> */}
         </div>
 
         {loadingRecent ? (
@@ -248,7 +248,8 @@ const ListActivities = (props: Props) => {
                 const isLast = index === productionLogRecnet.length - 1;
 
                 return (
-                  <div
+                  <Link
+                    href={`${appRoute.ownerDiary}/${item.id}`}
                     key={index}
                     className={`relative flex items-center gap-4 m-0
         ${!isLast ? "border-b border-gray-200" : ""}
@@ -276,7 +277,7 @@ const ListActivities = (props: Props) => {
                         </span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

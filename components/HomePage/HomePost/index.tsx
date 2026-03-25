@@ -9,7 +9,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./customSlide.css";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 
 interface Post {
   id: number;
@@ -56,70 +56,95 @@ const posts = [
   },
 ];
 
-interface Props {
-  setIsBeginning: Dispatch<SetStateAction<boolean>>;
-  setIsEnd: Dispatch<SetStateAction<boolean>>;
-}
+interface Props {}
 
 const HomePost = (props: Props) => {
-  const { setIsBeginning, setIsEnd } = props;
-  return (
-    <Swiper
-      className="home-post-swiper"
-      modules={[Navigation, Pagination]}
-      navigation={{
-        prevEl: ".home-prev",
-        nextEl: ".home-next",
-      }}
-      onSwiper={(swiper) => {
-        setIsBeginning(swiper.isBeginning);
-        setIsEnd(swiper.isEnd);
-      }}
-      onSlideChange={(swiper) => {
-        setIsBeginning(swiper.isBeginning);
-        setIsEnd(swiper.isEnd);
-      }}
-      pagination={{
-        clickable: true,
-        bulletClass:
-          "swiper-pagination-bullet w-5 h-1 rounded-full bg-white/40 opacity-100 transition-all duration-300",
-        bulletActiveClass:
-          "swiper-pagination-bullet-active custom-dot-active bg-primary",
-      }}
-      spaceBetween={24}
-      slidesPerView={4}
-      breakpoints={{
-        0: { slidesPerView: 1 },
-        640: { slidesPerView: 2 },
-        1024: { slidesPerView: 4 },
-      }}
-    >
-      {posts.map((post) => (
-        <SwiperSlide key={post.id}>
-          <div className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
-            {/* Image */}
-            <div className="relative w-full h-40">
-              <Image
-                src={post.image}
-                alt={post.title}
-                fill
-                className="object-cover"
-              />
-            </div>
+  const [isBeginning, setIsBeginning] = useState(true);
+  const [isEnd, setIsEnd] = useState(false);
 
-            {/* Content */}
-            <div className="p-4">
-              <h3 className="font-semibold text-base line-clamp-1">
-                {post.title}
-              </h3>
-              <p className="text-sm text-gray-500 mt-2 line-clamp-2">
-                {post.desc}
-              </p>
-            </div>
-          </div>
-        </SwiperSlide>
-      ))}
-    </Swiper>
+  return (
+    <div className="">
+      <div className="flex items-center justify-between">
+        <p className="text-black text-lg font-medium">Tin tức mới nhất</p>
+        <div className="">
+          <button
+            className={`home-prev nav-btn left p-2 cursor-pointer text-primary ${
+              isBeginning ? "opacity-40 cursor-none" : ""
+            }`}
+            disabled={isBeginning}
+          >
+            <FiChevronLeft size={20} />
+          </button>
+
+          <button
+            className={`home-next nav-btn right p-2 cursor-pointer text-primary ${
+              isEnd ? "opacity-40 cursor-none" : ""
+            }`}
+            disabled={isEnd}
+          >
+            <FiChevronRight size={20} />
+          </button>
+        </div>
+      </div>
+      <div className="pt-6 ">
+        <Swiper
+          className="home-post-swiper"
+          modules={[Navigation, Pagination]}
+          navigation={{
+            prevEl: ".home-prev",
+            nextEl: ".home-next",
+          }}
+          onSwiper={(swiper) => {
+            setIsBeginning(swiper.isBeginning);
+            setIsEnd(swiper.isEnd);
+          }}
+          onSlideChange={(swiper) => {
+            setIsBeginning(swiper.isBeginning);
+            setIsEnd(swiper.isEnd);
+          }}
+          pagination={{
+            clickable: true,
+            bulletClass:
+              "swiper-pagination-bullet w-5 h-1 rounded-full bg-white/40 opacity-100 transition-all duration-300",
+            bulletActiveClass:
+              "swiper-pagination-bullet-active custom-dot-active bg-primary",
+          }}
+          spaceBetween={24}
+          slidesPerView={4}
+          breakpoints={{
+            0: { slidesPerView: 1 },
+            640: { slidesPerView: 2 },
+            1024: { slidesPerView: 4 },
+          }}
+        >
+          {posts.map((post) => (
+            <SwiperSlide key={post.id}>
+              <div className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+                {/* Image */}
+                <div className="relative w-full h-40">
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="p-4">
+                  <h3 className="font-semibold text-base line-clamp-1">
+                    {post.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+                    {post.desc}
+                  </p>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </div>
   );
 };
 

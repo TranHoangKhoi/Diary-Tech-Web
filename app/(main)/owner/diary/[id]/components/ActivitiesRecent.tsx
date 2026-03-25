@@ -1,15 +1,18 @@
-import { appRoute } from "@/configs/appRoute";
 import { IActivities } from "@/types/TypeActitvities";
 import Link from "next/link";
 import React from "react";
 import { IoIosArrowForward } from "react-icons/io";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Props {
   activities: IActivities[];
+  farmId?: string;
 }
 
 const ActivitiesRecent = (props: Props) => {
-  const { activities } = props;
+  const { activities, farmId } = props;
+  const { getAddDiaryPath } = usePermissions();
+
   return (
     <div className="bg-white shadow drop-shadow px-4 py-4 rounded-xl">
       <p className="text-black text-sm font-medium">Hoạt động liên quan</p>
@@ -17,7 +20,7 @@ const ActivitiesRecent = (props: Props) => {
       <div className="pt-6 relative flex flex-col gap-5">
         {activities?.map((item, index) => (
           <Link
-            href={`${appRoute.addDiary}?addId=${item?._id}`}
+            href={getAddDiaryPath(item?._id, farmId)}
             key={index}
             className="flex items-center justify-between gap-2"
             title={`Thêm nhật ký hoạt động của ${item.activity_name}`}

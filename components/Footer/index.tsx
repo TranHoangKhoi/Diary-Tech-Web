@@ -1,5 +1,7 @@
 import { LogoWeb } from "@/configs/appInfo";
+import { appRoute } from "@/configs/appRoute";
 import Image from "next/image";
+import Link from "next/link";
 import { BiSolidHelpCircle } from "react-icons/bi";
 import { BsCollectionPlayFill } from "react-icons/bs";
 import { IoIosMail, IoMdChatboxes, IoMdSend } from "react-icons/io";
@@ -61,34 +63,46 @@ const Footer = () => {
               <h2 className="text-lg font-bold text-black">Liên kết nhanh</h2>
             </div>
             <div className="flex flex-col gap-2">
-              <div className="flex gap-1 items-center">
+              <Link
+                href={appRoute.home}
+                className="flex gap-1 items-center"
+                title="Trang chủ"
+              >
                 <MdOutlineKeyboardArrowRight
                   className="text-black translate-y-px"
                   size={16}
                 />
                 <p className="text-black text-sm ">Trang chủ</p>
-              </div>
-              <div className="flex gap-1 items-center">
+              </Link>
+              <Link
+                href={appRoute.diary}
+                className="flex gap-1 items-center"
+                title="Theo dõi nhật ký canh tác"
+              >
                 <MdOutlineKeyboardArrowRight
                   className="text-black translate-y-px"
                   size={16}
                 />
                 <p className="text-black text-sm ">Nhật ký canh tác</p>
-              </div>
-              <div className="flex gap-1 items-center">
+              </Link>
+              <Link
+                href={appRoute.map}
+                className="flex gap-1 items-center"
+                title="Quan sát bản đồ nông nghiệp trên nền tảng số hóa"
+              >
                 <MdOutlineKeyboardArrowRight
                   className="text-black translate-y-px"
                   size={16}
                 />
                 <p className="text-black text-sm ">Bản đồ số</p>
-              </div>
-              <div className="flex gap-1 items-center">
+              </Link>
+              <Link href={appRoute.home} className="flex gap-1 items-center">
                 <MdOutlineKeyboardArrowRight
                   className="text-black translate-y-px"
                   size={16}
                 />
                 <p className="text-black text-sm ">Báo cáo thống kê</p>
-              </div>
+              </Link>
               <div className="flex gap-1 items-center">
                 <MdOutlineKeyboardArrowRight
                   className="text-black translate-y-px"

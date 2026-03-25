@@ -12,7 +12,7 @@ export const appRoute = {
 export const API_INTERNAL = "/api/internal";
 
 export const API_URL = {
-  // api: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/",
+  // api: "http://localhost:5000/",
   api: "https://diarytech.bittechx.cloud/",
   // Auth
   login: "api/auth/login",
@@ -41,4 +41,6 @@ export const API_URL = {
   createFarm: "api/farm",
   // Crops
   getCropsCate: "api/crop",
+  // Statistics
+  getOwnerStatistics: "api/owner/dashboard/statistics",
 };

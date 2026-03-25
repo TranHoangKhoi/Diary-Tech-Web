@@ -1,34 +1,39 @@
 "use client";
 
+import { TypeTodayInsights } from "@/types/TypeStatistics";
 import { AlertTriangle, CalendarClock, MapPin } from "lucide-react";
 
-export default function InsightTodayCard() {
+interface Props {
+  todayInsights?: TypeTodayInsights;
+}
+
+export default function InsightTodayCard({ todayInsights }: Props) {
   const insights = [
     {
       icon: AlertTriangle,
-      label: "Nguy cơ sâu bệnh",
-      value: "3 khu vực",
+      label: "Hộ chưa cập nhật (30 ngày)",
+      value: todayInsights ? `${todayInsights.inactiveFarmsCount} hộ` : "—",
       color: "text-red-500",
     },
     {
       icon: CalendarClock,
-      label: "Đến hạn chăm sóc",
-      value: "12 hộ",
+      label: "Nhật ký tạo hôm nay",
+      value: todayInsights ? `${todayInsights.logsCreatedToday} bản ghi` : "—",
       color: "text-yellow-500",
     },
     {
       icon: MapPin,
-      label: "Farm chưa cập nhật",
-      value: "5 hộ",
+      label: "Hộ đang hoạt động",
+      value: todayInsights ? `${todayInsights.activeFarmsCount} hộ` : "—",
       color: "text-blue-500",
     },
   ];
 
   return (
     <div className="bg-background shadow-xl drop-shadow rounded-xl px-4 py-4">
-      <p className="text-base font-semibold mb-4">Tình trạng hôm nay</p>
+      <p className="text-black text-lg font-medium mb-4">Tình trạng hôm nay</p>
 
-      <div className="space-y-3">
+      <div className="space-y-3 flex flex-col gap-2">
         {insights.map((item, idx) => (
           <div key={idx} className="flex items-center justify-between">
             <div className="flex items-center gap-2">

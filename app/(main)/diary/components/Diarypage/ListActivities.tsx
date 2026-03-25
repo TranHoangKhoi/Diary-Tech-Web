@@ -71,7 +71,7 @@ const ListActivities = (props: Props) => {
 
   const grouped = useMemo(() => {
     const sorted = [...productionLog].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
     console.log(groupByDate(sorted));
 
@@ -104,7 +104,7 @@ const ListActivities = (props: Props) => {
           }`}
         >
           {i}
-        </button>
+        </button>,
       );
     }
 
@@ -272,14 +272,22 @@ const ListActivities = (props: Props) => {
                                 {log.activity_id.activity_name}
                               </h3>
 
-                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                {log.notes || "Không có mô tả"}
+                              <p className="text-sm leading-snug line-clamp-2">
+                                {log?.notes?.trim() ? (
+                                  <span className="text-gray-800">
+                                    {log.notes}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-600 italic text-sm">
+                                    {`Hoạt động "${log?.activity_id?.activity_name}" không có ghi chú`}
+                                  </span>
+                                )}
                               </p>
 
                               <span className="text-xs text-gray-500">
                                 {new Date(log.created_at).toLocaleTimeString(
                                   "vi-VN",
-                                  { hour: "2-digit", minute: "2-digit" }
+                                  { hour: "2-digit", minute: "2-digit" },
                                 )}
                               </span>
                             </div>
@@ -306,7 +314,7 @@ const ListActivities = (props: Props) => {
                     Hiển thị {(pagination.page - 1) * pagination.limit + 1} -{" "}
                     {Math.min(
                       pagination.page * pagination.limit,
-                      pagination.total
+                      pagination.total,
                     )}{" "}
                     trong số {pagination.total}
                   </p>

@@ -29,7 +29,7 @@ export interface IFarm {
     type_name: string;
     _id: string;
   };
-  geo_location?: number[];
+  geo_location?: [number, number] | any;
   area: string;
   soil_type?: string;
   farm_status: "active" | "inactive" | "under_maintenance";
